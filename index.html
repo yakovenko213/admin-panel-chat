@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM v6.1 (Full UI + Smart Logic)</title>
+    <title>Latiao CRM v6.2 (Dynamic UI)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -53,11 +53,23 @@
         .sidebar-header { padding: 15px; background: #fff; border-bottom: 1px solid var(--border); }
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .user-info-box h2 { margin: 0; font-size: 20px; font-weight: 800; color: var(--text-dark); }
-        .user-info-badge { font-size: 12px; color: #666; background: #f0f2f5; padding: 4px 10px; border-radius: 12px; margin-top: 4px; display: inline-block; }
+        
+        /* NEW TYPING ANIMATION STYLE */
+        .typing-container {
+            font-size: 13px; color: #666; margin-top: 4px; font-weight: 500;
+            display: flex; align-items: center; min-height: 20px;
+        }
+        .cursor {
+            display: inline-block; width: 2px; height: 14px; background-color: var(--primary);
+            margin-left: 2px; animation: blink 1s infinite;
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
         .header-actions { display: flex; gap: 8px; }
         .icon-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: #f0f2f5; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
         .icon-btn:hover { background: #e4e6eb; transform: scale(1.05); }
         .logout-btn:hover { background: #ffebee; color: red; }
+        
         .search-box { position: relative; margin-bottom: 10px; }
         .search-box input { width: 100%; padding: 12px 35px 12px 14px; box-sizing: border-box; border: 1px solid #eee; border-radius: 12px; background: #f9f9f9; font-size: 15px; }
         .search-box span { position: absolute; right: 12px; top: 12px; color: #999; }
@@ -91,14 +103,13 @@
         .manager-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 12px; background: #f9f9f9; margin-top: 4px; cursor: pointer; }
         
         .header-right { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
-        
-        /* STATUS BUTTON DESIGN */
         .status-toggle { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
         .status-active { background: var(--green); color: white; }
         .status-closed { background: #ecf0f1; color: #7f8c8d; }
-        
         .btn-trash { background: none; border: 1px solid #eee; width: 36px; height: 36px; border-radius: 50%; color: #e74c3c; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; }
+        
         .btn-sms-toggle { background: #e3f2fd; color: #1565c0; border: none; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .btn-sms-toggle:hover { background: #bbdefb; }
 
         /* --- SMS PANEL --- */
         #smsPanel {
@@ -109,6 +120,7 @@
         .sms-input { padding: 8px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; width: 140px; }
         .sms-select { padding: 8px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; flex: 1; }
         .btn-send-sms { background: #1565c0; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .btn-send-sms:hover { background: #0d47a1; }
 
         .messages-area { flex: 1; padding: 20px; overflow-y: auto; background: #f4f7f6; display: flex; flex-direction: column; gap: 10px; }
         .msg { max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px; position: relative; display: flex; flex-direction: column; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
@@ -124,7 +136,7 @@
         .input-area input { flex: 1; padding: 12px 20px; border: 1px solid #ddd; border-radius: 25px; outline: none; font-size: 16px; background: #f9f9f9; transition: 0.2s; }
         .send-btn { background: var(--primary); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(230,33,23,0.3); transition: 0.2s; }
 
-        /* --- SETTINGS MODAL (DESIGN) --- */
+        /* --- SETTINGS MODAL --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: #f8f9fa; width: 95%; max-width: 600px; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
         .modal-tabs { display: flex; background: #fff; padding: 10px; border-bottom: 1px solid #eee; overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch; }
@@ -133,7 +145,6 @@
         .tab-content { padding: 20px; overflow-y: auto; display: none; flex: 1; -webkit-overflow-scrolling: touch; }
         .tab-content.active { display: block; }
         
-        /* Setting Card */
         .setting-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 16px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .card-title { font-weight: 700; font-size: 13px; color: var(--text-dark); text-transform: uppercase; }
@@ -154,6 +165,7 @@
         .stat-num { font-size: 24px; font-weight: 800; display: block; }
         .promo-stats-box { margin-top: 20px; background: #fff; border-radius: 16px; padding: 15px; border: 1px solid #e1e4e8; }
         .promo-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .promo-row:last-child { border-bottom: none; }
         .promo-count { font-weight: bold; color: var(--primary); }
 
         @media (max-width: 768px) {
@@ -196,16 +208,28 @@
         </div>
 
         <div id="tab-settings" class="tab-content active">
-            <h4 style="margin:0 0 15px 0; color:#444;">Команда (Ви - Адмін, додайте себе!)</h4>
+            <h4 style="margin:0 0 15px 0; color:#444;">Команда</h4>
             <div id="managersList"></div>
             <button onclick="addManagerField()" class="btn-add">+ Додати менеджера</button>
 
             <h4 style="margin:0 0 15px 0; color:#444;">Система</h4>
             <div class="setting-card">
-                <div class="input-group"><label>Telegram Bot Token</label><input type="text" id="tgTokenInput" class="styled-input" placeholder="123456:ABC..."></div>
-                <div class="input-group"><label>Admin ID (Logs)</label><input type="text" id="adminIdInput" class="styled-input" placeholder="Ваш ID"></div>
-                <div class="input-group"><label>TurboSMS Token (HTTP API)</label><input type="text" id="turboTokenInput" class="styled-input" placeholder="c11bf..."></div>
-                <div class="input-group"><label>TurboSMS Sender (Альфа-ім'я)</label><input type="text" id="turboSenderInput" class="styled-input" placeholder="Напр. Latiao"></div>
+                <div class="input-group">
+                    <label>Telegram Bot Token</label>
+                    <input type="text" id="tgTokenInput" class="styled-input" placeholder="123456:ABC...">
+                </div>
+                <div class="input-group">
+                    <label>Admin ID (Logs)</label>
+                    <input type="text" id="adminIdInput" class="styled-input" placeholder="Ваш ID">
+                </div>
+                <div class="input-group">
+                    <label>TurboSMS Token (HTTP API)</label>
+                    <input type="text" id="turboTokenInput" class="styled-input" placeholder="c11bf...">
+                </div>
+                <div class="input-group">
+                    <label>TurboSMS Sender (Альфа-ім'я)</label>
+                    <input type="text" id="turboSenderInput" class="styled-input" placeholder="Напр. Latiao">
+                </div>
             </div>
         </div>
 
@@ -213,7 +237,9 @@
             <div id="promosList"></div>
             <button onclick="addPromoField()" class="btn-add">+ Створити промо-код</button>
             <h4 style="margin:20px 0 10px 0; color:#444;">Топ відправників</h4>
-            <div class="promo-stats-box" id="promoStatsList"><p style="color:#999;font-size:12px;text-align:center;">Завантаження...</p></div>
+            <div class="promo-stats-box" id="promoStatsList">
+                <p style="color:#999; font-size:12px; text-align:center;">Завантаження...</p>
+            </div>
         </div>
 
         <div id="tab-scripts" class="tab-content">
@@ -245,13 +271,19 @@
 <div class="sidebar">
     <div class="sidebar-header">
         <div class="top-row">
-            <div class="user-info-box"><h2>Latiao CRM</h2><span id="currentUserDisplay" class="user-info-badge">...</span></div>
+            <div class="user-info-box">
+                <h2>Latiao CRM</h2>
+                <div id="dynamicGreeting" class="typing-container"></div>
+            </div>
             <div class="header-actions">
                 <button id="btnSettings" class="icon-btn" onclick="openSettings()" title="Налаштування" style="display:none;">⚙️</button>
                 <button class="icon-btn logout-btn" onclick="logout()" title="Вихід">🚪</button>
             </div>
         </div>
-        <div class="search-box"><input type="text" id="searchInput" placeholder="Пошук..." onkeyup="renderChatList()"><span>🔍</span></div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Пошук..." onkeyup="renderChatList()">
+            <span>🔍</span>
+        </div>
         <div class="filters">
             <button class="filter-btn active" id="btnOpen" onclick="setFilter('open')">Відкриті</button>
             <button class="filter-btn" id="btnClosed" onclick="setFilter('closed')">Закриті</button>
@@ -265,11 +297,18 @@
     <div class="chat-header" id="chatHeader">
         <div class="header-left">
             <button class="back-btn" onclick="closeChatMobile()">⬅</button>
-            <div class="header-info"><h3 id="chatUserTitle">Чат</h3><select id="managerSelect" class="manager-select" onchange="manualAssign(this.value)"><option value="">Немає</option></select></div>
+            <div class="header-info">
+                <h3 id="chatUserTitle">Чат</h3>
+                <select id="managerSelect" class="manager-select" onchange="manualAssign(this.value)">
+                    <option value="">Немає</option>
+                </select>
+            </div>
         </div>
         <div class="header-right">
             <button class="btn-sms-toggle" onclick="toggleSmsPanel()">🎁 SMS</button>
-            <button id="statusBtn" class="status-toggle status-active" onclick="toggleChatStatus()"><span id="statusIcon">✓</span><span id="statusText">Завершити</span></button>
+            <button id="statusBtn" class="status-toggle status-active" onclick="toggleChatStatus()">
+                <span id="statusIcon">✓</span><span id="statusText">Завершити</span>
+            </button>
             <button onclick="archiveChat()" class="btn-trash">🗑</button>
         </div>
     </div>
@@ -281,9 +320,13 @@
     </div>
 
     <div class="messages-area" id="messagesArea">
-        <div style="text-align:center; margin-top:50px; color:#ccc;"><div style="font-size:40px; margin-bottom:10px;">💬</div>Оберіть діалог</div>
+        <div style="text-align:center; margin-top:50px; color:#ccc;">
+            <div style="font-size:40px; margin-bottom:10px;">💬</div>Оберіть діалог
+        </div>
     </div>
+    
     <div id="quickScripts" class="scripts-bar" style="display:none;"></div>
+
     <div class="input-area" id="inputArea">
         <input type="text" id="msgInput" placeholder="Повідомлення..." onkeypress="handleEnter(event)">
         <button class="send-btn" onclick="sendMessage()">➤</button>
@@ -295,10 +338,11 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let allChats=[], managers=[], savedScripts=[], savedFaq=[], savedPromos=[];
-    let currentChatId=null, currentChatStatus='open', filterType='open';
-    let tgBotToken="", superAdminId="", turboToken="", turboSender="";
-    let currentUser=null; const SESSION_TIMEOUT = 24*60*60*1000;
+    let allChats = [], managers = [], savedScripts = [], savedFaq = [], savedPromos = [];
+    let currentChatId = null, currentChatStatus = 'open', filterType = 'open';
+    let tgBotToken = "", superAdminId = "", turboToken = "", turboSender = "";
+    let currentUser = null;
+    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 
     checkSession();
 
@@ -337,10 +381,10 @@
 
     function initApp() {
         document.getElementById('loginScreen').style.display = 'none';
-        document.getElementById('currentUserDisplay').innerText = currentUser.name;
+        startTyper(currentUser.name); // Start Animation
+        
         if (currentUser.role === 'admin') {
             document.getElementById('btnSettings').style.display = 'flex';
-            document.getElementById('currentUserDisplay').style.color = 'var(--primary)';
         }
         loadSettings();
         
@@ -355,9 +399,7 @@
                     const isInvite = chatObj.lastMsg === "🗣 Запросити менеджера" || 
                                      chatObj.lastMsg.toLowerCase().includes("менеджер");
 
-                    // Assign only if invited OR (not faq AND not bot)
                     if (isInvite || (!isFaq && !chatObj.lastMsg.startsWith("Bot:"))) {
-                        // Assign to first manager (which could be Admin if they added themselves)
                         assignManager(managers[0].id, chatObj.id, "auto");
                         chatObj.assignedTo = managers[0].id;
                     }
@@ -377,6 +419,31 @@
             }
         });
         setInterval(checkAutoReassignment, 30000); 
+    }
+
+    // --- TYPING ANIMATION ---
+    function startTyper(name) {
+        const hour = new Date().getHours();
+        let greeting = "Привіт";
+        if (hour >= 5 && hour < 11) greeting = "Доброго ранку";
+        else if (hour >= 11 && hour < 18) greeting = "Добрий день";
+        else if (hour >= 18 && hour < 23) greeting = "Добрий вечір";
+        else greeting = "Доброї ночі";
+
+        const text = `${greeting}, ${name}`;
+        const container = document.getElementById('dynamicGreeting');
+        container.innerHTML = '<span id="typeTarget"></span><span class="cursor"></span>';
+        const target = document.getElementById('typeTarget');
+        
+        let i = 0;
+        function type() {
+            if (i < text.length) {
+                target.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, 80); // Typing speed
+            }
+        }
+        type();
     }
 
     function renderChatList() {
@@ -409,7 +476,11 @@
 
             div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''} ${chat.unread ? 'unread' : ''} ${isClosed ? 'closed' : ''}`;
             div.onclick = () => openChat(chat.id);
-            div.innerHTML = `<div class="chat-top"><span class="chat-id">#${chat.id.substring(0,6)}</span><span class="chat-time">${time}</span></div><div class="chat-preview">${chat.lastMsg || '...'}</div><div class="badges-row">${badgesHtml}</div>`;
+            div.innerHTML = `
+                <div class="chat-top"><span class="chat-id">#${chat.id.substring(0,6)}</span><span class="chat-time">${time}</span></div>
+                <div class="chat-preview">${chat.lastMsg || '...'}</div>
+                <div class="badges-row">${badgesHtml}</div>
+            `;
             container.appendChild(div);
         });
     }
