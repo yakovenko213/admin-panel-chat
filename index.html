@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latiao Admin: Time & Status</title>
+    <title>Latiao Admin: Tabs & Status</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -68,21 +68,27 @@
 
         .filters {
             display: flex;
-            gap: 10px;
+            gap: 5px;
+            background: #f0f0f0;
+            padding: 4px;
+            border-radius: 8px;
         }
         .filter-btn {
+            flex: 1;
             background: none;
             border: none;
-            padding: 5px 10px;
+            padding: 6px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 12px;
             color: #666;
-            border-radius: 15px;
+            border-radius: 6px;
             font-weight: 500;
+            transition: 0.2s;
         }
         .filter-btn.active {
-            background: var(--primary);
-            color: white;
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .chat-list {
@@ -114,12 +120,11 @@
         
         /* Стиль для закритих чатів */
         .chat-item.closed {
-            opacity: 0.6;
-            background: #f4f4f4;
+            opacity: 0.7;
+            background: #f8f9fa;
         }
         .chat-item.closed strong {
-            text-decoration: line-through;
-            color: #888;
+            color: #666;
         }
 
         .assigned-tag {
@@ -174,10 +179,14 @@
             cursor: pointer;
             border: none;
             margin-right: 10px;
-            font-weight: 500;
+            font-weight: 600;
+            transition: 0.2s;
         }
         .btn-close-chat { background: #e0f7fa; color: #006064; }
+        .btn-close-chat:hover { background: #b2ebf2; }
+        
         .btn-open-chat { background: #ffebee; color: #c62828; }
+        .btn-open-chat:hover { background: #ffcdd2; }
 
         .messages-area {
             flex: 1;
@@ -271,13 +280,14 @@
         </div>
         
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Пошук (ID або текст)..." onkeyup="renderChatList()">
+            <input type="text" id="searchInput" placeholder="Пошук..." onkeyup="renderChatList()">
             <span>🔍</span>
         </div>
 
         <div class="filters">
-            <button class="filter-btn active" id="btnAll" onclick="setFilter('all')">Всі</button>
-            <button class="filter-btn" id="btnUnread" onclick="setFilter('unread')">Непрочитані</button>
+            <button class="filter-btn active" id="btnOpen" onclick="setFilter('open')">Відкриті</button>
+            <button class="filter-btn" id="btnClosed" onclick="setFilter('closed')">Закриті</button>
+            <button class="filter-btn" id="btnAll" onclick="setFilter('all')">Всі</button>
         </div>
     </div>
     
@@ -325,7 +335,7 @@
     let allChats = [];
     let currentChatId = null;
     let currentChatStatus = 'open'; // open | closed
-    let filterType = 'all'; 
+    let filterType = 'open'; // default view
     let managers = [];
     let tgBotToken = "";
 
@@ -346,9 +356,8 @@
              const currentChatData = allChats.find(c => c.id === currentChatId);
              if(currentChatData) {
                  document.getElementById('managerSelect').value = currentChatData.assignedTo || "";
-                 // Update Status Button UI
-                 updateStatusButtonUI(currentChatData.status || 'open');
                  currentChatStatus = currentChatData.status || 'open';
+                 updateStatusButtonUI(currentChatStatus);
              }
         }
     });
@@ -362,12 +371,15 @@
 
         const filtered = allChats.filter(chat => {
             const matchSearch = chat.id.toLowerCase().includes(search) || (chat.lastMsg && chat.lastMsg.toLowerCase().includes(search));
-            if (filterType === 'unread') return matchSearch && chat.unread === true;
-            return matchSearch;
+            const status = chat.status || 'open';
+
+            if (filterType === 'open') return matchSearch && status !== 'closed';
+            if (filterType === 'closed') return matchSearch && status === 'closed';
+            return matchSearch; // 'all'
         });
 
         if (filtered.length === 0) {
-            container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Нічого не знайдено</div>';
+            container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Тут порожньо</div>';
             return;
         }
 
@@ -379,11 +391,10 @@
             if (chat.assignedTo) {
                 const mgr = managers.find(m => m.id == chat.assignedTo);
                 if (mgr) managerName = `<span class="assigned-tag">👤 ${mgr.name}</span>`;
-            } else {
+            } else if ((chat.status || 'open') !== 'closed') {
                  managerName = `<span class="assigned-tag" style="background:#fff3cd; color:#856404;">⚠️ Вільний</span>`;
             }
             
-            // Check status for styling
             const isClosed = chat.status === 'closed';
 
             div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''} ${chat.unread ? 'unread' : ''} ${isClosed ? 'closed' : ''}`;
@@ -403,8 +414,9 @@
 
     function setFilter(type) {
         filterType = type;
+        document.getElementById('btnOpen').className = type === 'open' ? 'filter-btn active' : 'filter-btn';
+        document.getElementById('btnClosed').className = type === 'closed' ? 'filter-btn active' : 'filter-btn';
         document.getElementById('btnAll').className = type === 'all' ? 'filter-btn active' : 'filter-btn';
-        document.getElementById('btnUnread').className = type === 'unread' ? 'filter-btn active' : 'filter-btn';
         renderChatList();
     }
 
@@ -426,7 +438,7 @@
         updateManagerDropdown(chatData ? chatData.assignedTo : "");
         updateStatusButtonUI(status);
 
-        // Mark as read (only if open, but generally safe)
+        // Mark as read
         db.ref('active_chats/' + chatId).update({ unread: false });
 
         const area = document.getElementById('messagesArea');
@@ -445,12 +457,10 @@
         });
     }
 
-    // Function to render single message with time
     function renderMessage(msg, container) {
         const div = document.createElement('div');
         div.className = `msg ${msg.type === 'admin' ? 'admin' : 'user'}`;
         
-        // Format Time
         let timeStr = "";
         if (msg.ts) {
             timeStr = new Date(msg.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -467,7 +477,7 @@
     function updateStatusButtonUI(status) {
         const btn = document.getElementById('statusBtn');
         if (status === 'closed') {
-            btn.innerText = '🔄 Відкрити чат';
+            btn.innerText = '🔄 Відновити чат';
             btn.className = 'status-btn btn-open-chat';
         } else {
             btn.innerText = '✅ Завершити';
@@ -478,9 +488,12 @@
     function toggleChatStatus() {
         if(!currentChatId) return;
         const newStatus = currentChatStatus === 'open' ? 'closed' : 'open';
+        
         db.ref('active_chats/' + currentChatId).update({ status: newStatus });
         
-        // Optional: If closing, maybe remove assigned manager? No, better keep history.
+        // UI auto-update via listener, but visual feedback is instant
+        currentChatStatus = newStatus;
+        updateStatusButtonUI(newStatus);
     }
 
     // --- Manager Logic ---
@@ -520,7 +533,7 @@
         }
     }
 
-    // --- AUTO PILOT LOGIC (Updated) ---
+    // --- AUTO PILOT LOGIC ---
     function checkAutoReassignment() {
         if (managers.length === 0) return; 
 
@@ -528,7 +541,7 @@
         const TIMEOUT = 5 * 60 * 1000; 
 
         allChats.forEach(chat => {
-            // IGNORE CLOSED CHATS & READ CHATS
+            // Ignore closed or read chats
             if (chat.unread === true && chat.status !== 'closed') {
                 const timeDiff = NOW - chat.ts;
                 if (timeDiff > TIMEOUT) {
@@ -560,7 +573,7 @@
         const ts = Date.now();
         db.ref('support/' + currentChatId).push({ text, type: 'admin', ts });
         
-        // If sending message, auto re-open chat if it was closed
+        // Auto re-open if closed
         db.ref('active_chats/' + currentChatId).update({ 
             lastMsg: 'Ви: ' + text, 
             ts, 
@@ -577,7 +590,7 @@
 
     function archiveChat() {
         if (!currentChatId) return;
-        if(confirm('Видалити чат зі списку?')) {
+        if(confirm('Видалити чат з історії назавжди?')) {
             db.ref('active_chats/' + currentChatId).remove();
             location.reload();
         }
