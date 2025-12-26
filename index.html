@@ -3,52 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM v6.0 (Smart Routing)</title>
+    <title>Latiao CRM v6.1 (Full UI + Smart Logic)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
         :root {
-            --primary: #e62117; --bg: #f4f7f6; --sidebar-bg: #fff; --border: #e1e4e8;
-            --active-item: #fff5f5; --green: #2ecc71; --orange: #f39c12; --red: #e74c3c;
-            --text-dark: #2c3e50; --text-gray: #95a5a6;
+            --primary: #e62117; 
+            --bg: #f4f7f6;
+            --sidebar-bg: #fff;
+            --border: #e1e4e8;
+            --active-item: #fff5f5;
+            --green: #2ecc71;
+            --orange: #f39c12;
+            --red: #e74c3c;
+            --text-dark: #2c3e50;
+            --text-gray: #95a5a6;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100dvh; overflow: hidden; }
-        
-        /* LOGIN */
-        #loginScreen { position: fixed; inset: 0; background: #f4f7f6; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .login-box { background: white; padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); width: 300px; text-align: center; }
-        .login-input { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #eee; border-radius: 12px; box-sizing: border-box; font-size: 16px; background: #f9f9f9; }
-        .login-btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
 
-        /* LAYOUT */
-        .sidebar { width: 360px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; z-index: 2; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            margin: 0; display: flex; height: 100vh; height: 100dvh; overflow: hidden;
+        }
+
+        /* --- LOGIN --- */
+        #loginScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #f4f7f6; z-index: 9999; display: flex; align-items: center; justify-content: center;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08); width: 300px; text-align: center;
+        }
+        .login-input {
+            width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid #eee; border-radius: 12px; 
+            box-sizing: border-box; font-size: 16px; background: #f9f9f9; transition: 0.2s;
+        }
+        .login-btn {
+            width: 100%; padding: 14px; background: var(--primary); color: white; border: none; 
+            border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 360px; background: var(--sidebar-bg); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; flex-shrink: 0; transition: transform 0.3s ease; z-index: 2;
+        }
         .sidebar-header { padding: 15px; background: #fff; border-bottom: 1px solid var(--border); }
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .user-info-box h2 { margin: 0; font-size: 20px; font-weight: 800; color: var(--text-dark); }
         .user-info-badge { font-size: 12px; color: #666; background: #f0f2f5; padding: 4px 10px; border-radius: 12px; margin-top: 4px; display: inline-block; }
-        
         .header-actions { display: flex; gap: 8px; }
         .icon-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: #f0f2f5; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
         .icon-btn:hover { background: #e4e6eb; transform: scale(1.05); }
         .logout-btn:hover { background: #ffebee; color: red; }
-
-        .search-box input { width: 100%; padding: 12px 14px; border: 1px solid #eee; border-radius: 12px; background: #f9f9f9; font-size: 15px; box-sizing: border-box; }
-        .filters { display: flex; gap: 5px; background: #f0f2f5; padding: 4px; border-radius: 12px; margin-top: 10px; }
-        .filter-btn { flex: 1; border: none; padding: 8px; cursor: pointer; font-size: 13px; color: #666; border-radius: 10px; font-weight: 600; background: none; }
+        .search-box { position: relative; margin-bottom: 10px; }
+        .search-box input { width: 100%; padding: 12px 35px 12px 14px; box-sizing: border-box; border: 1px solid #eee; border-radius: 12px; background: #f9f9f9; font-size: 15px; }
+        .search-box span { position: absolute; right: 12px; top: 12px; color: #999; }
+        .filters { display: flex; gap: 5px; background: #f0f2f5; padding: 4px; border-radius: 12px; }
+        .filter-btn { flex: 1; background: none; border: none; padding: 8px; cursor: pointer; font-size: 13px; color: #666; border-radius: 10px; font-weight: 600; transition: 0.2s; }
         .filter-btn.active { background: white; color: var(--text-dark); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-        .chat-list { flex: 1; overflow-y: auto; }
-        .chat-item { padding: 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; background: #fff; transition: 0.2s; }
+        .chat-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .chat-item { padding: 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; position: relative; background: #fff; transition: 0.2s; }
         .chat-item:hover { background: #fafafa; }
         .chat-item.active { background: var(--active-item); border-left: 4px solid var(--primary); }
         .chat-item.unread { background: #fffcfc; }
-        .chat-item.closed { opacity: 0.6; filter: grayscale(0.8); }
+        .chat-item.closed { opacity: 0.6; filter: grayscale(0.8); background: #fdfdfd; }
         .chat-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
         .chat-id { font-weight: 700; font-size: 15px; color: var(--text-dark); }
         .chat-time { font-size: 11px; color: #999; }
         .chat-preview { font-size: 13px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
-        
         .badges-row { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
         .badge { font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 700; text-transform: uppercase; }
         .badge-new { background: var(--red); color: white; animation: pulse 2s infinite; }
@@ -56,25 +82,33 @@
         .badge-manager { background: #eef2f5; color: #555; border: 1px solid #e1e4e8; font-weight: 600; text-transform: none; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
-        /* MAIN CHAT */
+        /* --- MAIN AREA --- */
         .main { flex: 1; display: flex; flex-direction: column; background: #fff; position: relative; z-index: 1; }
-        .chat-header { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #fff; }
+        .chat-header { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: #fff; flex-shrink: 0; gap: 10px; }
         .back-btn { display: none; background: none; border: none; font-size: 24px; color: #333; padding-right: 15px; }
-        .header-info h3 { margin: 0; font-size: 16px; font-weight: 700; }
-        .manager-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 12px; background: #f9f9f9; margin-top: 4px; }
+        .header-left { display: flex; align-items: center; overflow: hidden; flex: 1; }
+        .header-info h3 { margin: 0; font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .manager-select { padding: 4px 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 12px; background: #f9f9f9; margin-top: 4px; cursor: pointer; }
         
-        .status-toggle { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .header-right { display: flex; gap: 8px; flex-shrink: 0; align-items: center; }
+        
+        /* STATUS BUTTON DESIGN */
+        .status-toggle { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; }
         .status-active { background: var(--green); color: white; }
         .status-closed { background: #ecf0f1; color: #7f8c8d; }
         
-        .btn-sms-toggle { background: #e3f2fd; color: #1565c0; border: none; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-right: 10px; }
+        .btn-trash { background: none; border: 1px solid #eee; width: 36px; height: 36px; border-radius: 50%; color: #e74c3c; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; }
+        .btn-sms-toggle { background: #e3f2fd; color: #1565c0; border: none; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
 
-        /* SMS PANEL */
-        #smsPanel { background: #f1f8ff; border-bottom: 1px solid #d0e3f0; padding: 10px 20px; display: none; gap: 10px; align-items: center; animation: slideDown 0.3s ease; }
+        /* --- SMS PANEL --- */
+        #smsPanel {
+            background: #f1f8ff; border-bottom: 1px solid #d0e3f0; padding: 10px 20px; display: none;
+            gap: 10px; align-items: center; animation: slideDown 0.3s ease; flex-shrink: 0;
+        }
         @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .sms-input { padding: 8px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; width: 140px; }
         .sms-select { padding: 8px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; flex: 1; }
-        .btn-send-sms { background: #1565c0; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .btn-send-sms { background: #1565c0; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; }
 
         .messages-area { flex: 1; padding: 20px; overflow-y: auto; background: #f4f7f6; display: flex; flex-direction: column; gap: 10px; }
         .msg { max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px; position: relative; display: flex; flex-direction: column; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
@@ -82,32 +116,45 @@
         .msg.admin { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
         .msg-time { font-size: 10px; margin-top: 5px; align-self: flex-end; opacity: 0.7; }
 
-        .scripts-bar { display: flex; gap: 8px; padding: 10px 15px; background: #fff; border-top: 1px solid #f0f0f0; overflow-x: auto; white-space: nowrap; }
-        .script-chip { background: #f0f2f5; color: #444; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1px solid #e1e4e8; font-weight: 500; flex-shrink: 0; }
+        .scripts-bar { display: flex; gap: 8px; padding: 10px 15px; background: #fff; border-top: 1px solid #f0f0f0; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        .script-chip { background: #f0f2f5; color: #444; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1px solid #e1e4e8; font-weight: 500; transition: 0.2s; flex-shrink: 0; }
         .script-chip:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
         .input-area { padding: 10px 15px 15px 15px; display: flex; gap: 10px; background: #fff; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
-        .input-area input { flex: 1; padding: 12px 20px; border: 1px solid #ddd; border-radius: 25px; outline: none; font-size: 16px; background: #f9f9f9; }
-        .send-btn { background: var(--primary); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(230,33,23,0.3); }
+        .input-area input { flex: 1; padding: 12px 20px; border: 1px solid #ddd; border-radius: 25px; outline: none; font-size: 16px; background: #f9f9f9; transition: 0.2s; }
+        .send-btn { background: var(--primary); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(230,33,23,0.3); transition: 0.2s; }
 
-        /* SETTINGS MODAL */
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: #f8f9fa; width: 95%; max-width: 600px; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
-        .modal-tabs { display: flex; background: #fff; padding: 10px; border-bottom: 1px solid #eee; overflow-x: auto; }
-        .tab-btn { flex: 1; padding: 10px 15px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-gray); border-radius: 12px; min-width: 80px; white-space: nowrap; }
-        .tab-btn.active { background: var(--primary); color: white; }
-        .tab-content { padding: 20px; overflow-y: auto; display: none; flex: 1; }
+        /* --- SETTINGS MODAL (DESIGN) --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: #f8f9fa; width: 95%; max-width: 600px; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        .modal-tabs { display: flex; background: #fff; padding: 10px; border-bottom: 1px solid #eee; overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch; }
+        .tab-btn { flex: 1; padding: 10px 15px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-gray); border-radius: 12px; min-width: 80px; transition: 0.2s; font-size: 13px; white-space: nowrap; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(230,33,23,0.2); }
+        .tab-content { padding: 20px; overflow-y: auto; display: none; flex: 1; -webkit-overflow-scrolling: touch; }
         .tab-content.active { display: block; }
         
-        .setting-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 16px; padding: 15px; margin-bottom: 15px; position: relative; }
-        .card-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        /* Setting Card */
+        .setting-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 16px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .card-title { font-weight: 700; font-size: 13px; color: var(--text-dark); text-transform: uppercase; }
+        .btn-remove { color: #e74c3c; background: #fff5f5; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        
+        .input-group { margin-bottom: 10px; }
         .input-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-gray); margin-bottom: 5px; text-transform: uppercase; }
-        .styled-input, .styled-textarea { width: 100%; padding: 10px 12px; border: 1px solid #eee; border-radius: 8px; background: #fdfdfd; box-sizing: border-box; }
+        .styled-input, .styled-textarea { width: 100%; padding: 10px 12px; border: 1px solid #eee; border-radius: 8px; background: #fdfdfd; font-family: inherit; font-size: 14px; box-sizing: border-box; }
+        .styled-textarea { resize: vertical; min-height: 70px; }
+        
         .btn-add { width: 100%; padding: 12px; background: transparent; border: 2px dashed #dce0e5; color: #7f8c8d; font-weight: 600; border-radius: 12px; cursor: pointer; margin-bottom: 20px; }
-        .sticky-footer { padding: 15px; background: #fff; border-top: 1px solid #eee; display: flex; gap: 10px; }
+        .sticky-footer { padding: 15px; background: #fff; border-top: 1px solid #eee; display: flex; gap: 10px; flex-shrink: 0; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
         .btn-save { flex: 2; padding: 12px; background: var(--text-dark); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
         .btn-close { flex: 1; padding: 12px; background: #f0f2f5; color: #555; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box { background: #fff; padding: 15px; border-radius: 16px; text-align: center; border: 1px solid #eee; }
+        .stat-num { font-size: 24px; font-weight: 800; display: block; }
+        .promo-stats-box { margin-top: 20px; background: #fff; border-radius: 16px; padding: 15px; border: 1px solid #e1e4e8; }
+        .promo-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+        .promo-count { font-weight: bold; color: var(--primary); }
 
         @media (max-width: 768px) {
             .sidebar { width: 100%; height: 100%; position: absolute; }
@@ -118,10 +165,11 @@
             .chat-header { padding: 0 10px; }
             .status-toggle span#statusText { display: none; }
             .status-toggle { padding: 0; width: 38px; height: 38px; border-radius: 50%; justify-content: center; }
-            #smsPanel { flex-direction: column; align-items: stretch; }
+            #smsPanel { flex-direction: column; align-items: stretch; padding: 15px; }
             .sms-input { width: 100%; }
             .modal { align-items: flex-end; } 
-            .modal-content { width: 100%; max-width: 100%; height: 85vh; border-radius: 24px 24px 0 0; }
+            .modal-content { width: 100%; max-width: 100%; height: 85vh; border-radius: 24px 24px 0 0; margin: 0; }
+            .modal-tabs { position: sticky; top: 0; z-index: 10; background: #fff; }
         }
     </style>
 </head>
@@ -148,24 +196,24 @@
         </div>
 
         <div id="tab-settings" class="tab-content active">
-            <h4 style="margin:0 0 15px 0; color:#444;">Команда (Додайте себе сюди!)</h4>
+            <h4 style="margin:0 0 15px 0; color:#444;">Команда (Ви - Адмін, додайте себе!)</h4>
             <div id="managersList"></div>
             <button onclick="addManagerField()" class="btn-add">+ Додати менеджера</button>
 
             <h4 style="margin:0 0 15px 0; color:#444;">Система</h4>
             <div class="setting-card">
-                <div class="input-group"><label>Telegram Bot Token</label><input type="text" id="tgTokenInput" class="styled-input"></div>
-                <div class="input-group"><label>Admin ID (Logs)</label><input type="text" id="adminIdInput" class="styled-input"></div>
-                <div class="input-group"><label>TurboSMS Token</label><input type="text" id="turboTokenInput" class="styled-input"></div>
-                <div class="input-group"><label>TurboSMS Sender</label><input type="text" id="turboSenderInput" class="styled-input"></div>
+                <div class="input-group"><label>Telegram Bot Token</label><input type="text" id="tgTokenInput" class="styled-input" placeholder="123456:ABC..."></div>
+                <div class="input-group"><label>Admin ID (Logs)</label><input type="text" id="adminIdInput" class="styled-input" placeholder="Ваш ID"></div>
+                <div class="input-group"><label>TurboSMS Token (HTTP API)</label><input type="text" id="turboTokenInput" class="styled-input" placeholder="c11bf..."></div>
+                <div class="input-group"><label>TurboSMS Sender (Альфа-ім'я)</label><input type="text" id="turboSenderInput" class="styled-input" placeholder="Напр. Latiao"></div>
             </div>
         </div>
 
         <div id="tab-promos" class="tab-content">
             <div id="promosList"></div>
             <button onclick="addPromoField()" class="btn-add">+ Створити промо-код</button>
-            <h4 style="margin:20px 0 10px 0;">Топ відправників</h4>
-            <div style="background:#fff;border-radius:16px;padding:15px;border:1px solid #e1e4e8;" id="promoStatsList">loading...</div>
+            <h4 style="margin:20px 0 10px 0; color:#444;">Топ відправників</h4>
+            <div class="promo-stats-box" id="promoStatsList"><p style="color:#999;font-size:12px;text-align:center;">Завантаження...</p></div>
         </div>
 
         <div id="tab-scripts" class="tab-content">
@@ -179,10 +227,10 @@
         </div>
 
         <div id="tab-stats" class="tab-content">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
-                <div style="background:#fff;padding:15px;border-radius:16px;text-align:center;border:1px solid #eee;"><span style="font-size:24px;font-weight:800;display:block;" id="statTotal">0</span><span style="font-size:11px;color:#999;">ВСЬОГО</span></div>
-                <div style="background:#fff;padding:15px;border-radius:16px;text-align:center;border:1px solid #eee;"><span style="font-size:24px;font-weight:800;display:block;color:#e67e22;" id="statActive">0</span><span style="font-size:11px;color:#999;">В РОБОТІ</span></div>
-                <div style="background:#fff;padding:15px;border-radius:16px;text-align:center;border:1px solid #eee;"><span style="font-size:24px;font-weight:800;display:block;color:#2ecc71;" id="statClosed">0</span><span style="font-size:11px;color:#999;">ЗАКРИТІ</span></div>
+            <div class="stat-grid">
+                <div class="stat-box"><span class="stat-num" id="statTotal">0</span><span style="font-size:11px; color:#999;">ВСЬОГО</span></div>
+                <div class="stat-box"><span class="stat-num" style="color:#e67e22" id="statActive">0</span><span style="font-size:11px; color:#999;">В РОБОТІ</span></div>
+                <div class="stat-box"><span class="stat-num" style="color:#27ae60" id="statClosed">0</span><span style="font-size:11px; color:#999;">ЗАКРИТІ</span></div>
             </div>
             <div id="managerStatsList"></div>
         </div>
@@ -199,8 +247,8 @@
         <div class="top-row">
             <div class="user-info-box"><h2>Latiao CRM</h2><span id="currentUserDisplay" class="user-info-badge">...</span></div>
             <div class="header-actions">
-                <button id="btnSettings" class="icon-btn" onclick="openSettings()" style="display:none;">⚙️</button>
-                <button class="icon-btn logout-btn" onclick="logout()">🚪</button>
+                <button id="btnSettings" class="icon-btn" onclick="openSettings()" title="Налаштування" style="display:none;">⚙️</button>
+                <button class="icon-btn logout-btn" onclick="logout()" title="Вихід">🚪</button>
             </div>
         </div>
         <div class="search-box"><input type="text" id="searchInput" placeholder="Пошук..." onkeyup="renderChatList()"><span>🔍</span></div>
@@ -222,7 +270,7 @@
         <div class="header-right">
             <button class="btn-sms-toggle" onclick="toggleSmsPanel()">🎁 SMS</button>
             <button id="statusBtn" class="status-toggle status-active" onclick="toggleChatStatus()"><span id="statusIcon">✓</span><span id="statusText">Завершити</span></button>
-            <button onclick="archiveChat()" style="background:none;border:1px solid #eee;width:36px;height:36px;border-radius:50%;color:#e74c3c;cursor:pointer;display:flex;align-items:center;justify-content:center;">🗑</button>
+            <button onclick="archiveChat()" class="btn-trash">🗑</button>
         </div>
     </div>
 
@@ -233,11 +281,9 @@
     </div>
 
     <div class="messages-area" id="messagesArea">
-        <div style="text-align:center;margin-top:50px;color:#ccc;"><div style="font-size:40px;margin-bottom:10px;">💬</div>Оберіть діалог</div>
+        <div style="text-align:center; margin-top:50px; color:#ccc;"><div style="font-size:40px; margin-bottom:10px;">💬</div>Оберіть діалог</div>
     </div>
-    
     <div id="quickScripts" class="scripts-bar" style="display:none;"></div>
-
     <div class="input-area" id="inputArea">
         <input type="text" id="msgInput" placeholder="Повідомлення..." onkeypress="handleEnter(event)">
         <button class="send-btn" onclick="sendMessage()">➤</button>
@@ -272,11 +318,11 @@
         db.ref('config/managers').once('value', snap => {
             const mgrs = snap.val() || [];
             let found = mgrs.find(m => m.login === login && m.password === pass);
-            // Allow admin/admin if DB empty, else strictly check DB
+            // Allow admin/admin for initial setup
             if (!found && login === 'admin' && pass === 'admin' && mgrs.length === 0) {
                 found = { name: 'Super Admin', id: 'root', role: 'admin' };
             } else if (found && found.login === 'admin') {
-                found.role = 'admin'; // Force role if login is admin
+                found.role = 'admin'; 
             }
 
             if (found) {
@@ -284,7 +330,7 @@
                 localStorage.setItem('lc_user', JSON.stringify(currentUser));
                 localStorage.setItem('lc_time', Date.now());
                 initApp();
-            } else { alert('Помилка входу (або додайте себе в менеджери)'); }
+            } else { alert('Помилка входу (додайте себе в налаштуваннях)'); }
         });
     }
     function logout() { localStorage.removeItem('lc_user'); localStorage.removeItem('lc_time'); location.reload(); }
@@ -298,35 +344,24 @@
         }
         loadSettings();
         
-        // --- ACTIVE CHATS LISTENER & ROUTING ---
         db.ref('active_chats').on('value', snap => {
             allChats = [];
             snap.forEach(child => {
                 const chatObj = { id: child.key, ...child.val() };
                 
-                // ============================================
-                // SMART AUTO-ASSIGN LOGIC (FILTER FAQ)
-                // ============================================
-                // 1. Is it unassigned?
+                // SMART ASSIGN LOGIC
                 if (!chatObj.assignedTo && chatObj.status !== 'closed' && managers.length > 0) {
-                    
-                    // 2. Check if message matches an FAQ (Exact match)
                     const isFaq = savedFaq.some(f => f.q === chatObj.lastMsg);
-                    
-                    // 3. Check if it's an explicit "Invite Manager" call
-                    // (Matches specific button text OR contains keywords)
                     const isInvite = chatObj.lastMsg === "🗣 Запросити менеджера" || 
-                                     chatObj.lastMsg.toLowerCase().includes("менеджер") ||
-                                     chatObj.lastMsg.toLowerCase().includes("людин");
+                                     chatObj.lastMsg.toLowerCase().includes("менеджер");
 
-                    // 4. RULE: Assign IF (Invite) OR (NOT FAQ and NOT Bot)
+                    // Assign only if invited OR (not faq AND not bot)
                     if (isInvite || (!isFaq && !chatObj.lastMsg.startsWith("Bot:"))) {
-                        // Pick user (if I'm logged in and in list, pick me or rotate)
+                        // Assign to first manager (which could be Admin if they added themselves)
                         assignManager(managers[0].id, chatObj.id, "auto");
                         chatObj.assignedTo = managers[0].id;
                     }
                 }
-                // ============================================
 
                 allChats.push(chatObj);
             });
@@ -360,7 +395,7 @@
             const div = document.createElement('div');
             const time = new Date(chat.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             const isClosed = chat.status === 'closed';
-            const isUserLast = chat.lastMsg && !chat.lastMsg.startsWith("Ви:");
+            const isUserLast = chat.lastMsg && !chat.lastMsg.startsWith("Ви:") && !chat.lastMsg.startsWith("👋");
             const timeDiff = Date.now() - chat.ts;
             const isStale = !isClosed && isUserLast && timeDiff > 5 * 60 * 1000;
             let badgesHtml = '';
@@ -465,27 +500,22 @@
     }
     function manualAssign(val) { assignManager(val, currentChatId, "manual"); }
     
-    // --- ASSIGN MANAGER + AUTO GREETING ---
     function assignManager(managerId, chatId, reason = "manual") {
         if(!chatId) return;
         db.ref('active_chats/' + chatId).update({ assignedTo: managerId });
-        
         const mgr = managers.find(m => m.id == managerId);
         
-        // 1. Notify Client (Auto-Greeting)
+        // Auto-Greet
         if (mgr) {
             const systemMsg = `👋 Менеджер ${mgr.name} приєднався до чату і вже ознайомлюється з вашим питанням.`;
-            // Check last msg to avoid spam
             db.ref('support/' + chatId).limitToLast(1).once('value', snap => {
-                let lastMsg = null;
-                snap.forEach(c => lastMsg = c.val());
+                let lastMsg = null; snap.forEach(c => lastMsg = c.val());
                 if (!lastMsg || lastMsg.text !== systemMsg) {
                      db.ref('support/' + chatId).push({ text: systemMsg, type: 'admin', ts: Date.now() });
                 }
             });
         }
 
-        // 2. Notify Manager (Telegram)
         if (tgBotToken) {
             const managerName = mgr ? mgr.name : "Невідомий";
             if (managerId && mgr) {
@@ -500,16 +530,13 @@
             }
         }
     }
-    
     function sendTelegram(chatId, text) {
         fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' }) }).catch(console.error);
     }
-    
     function checkAutoReassignment() {
         if (managers.length === 0) return; 
         const NOW = Date.now(); const TIMEOUT = 5 * 60 * 1000; 
         allChats.forEach(chat => {
-            // Only reassign if user is waiting
             if (chat.unread === true && chat.status !== 'closed') {
                 const timeDiff = NOW - chat.ts;
                 if (timeDiff > TIMEOUT) {
@@ -521,10 +548,7 @@
                              const nextManagerId = managers[nextIndex].id;
                              if (nextManagerId !== chat.assignedTo) assignManager(nextManagerId, chat.id, "timeout");
                         }
-                    } else { 
-                        // If free and timed out (shouldn't happen with smart routing, but safety net)
-                        assignManager(managers[0].id, chat.id, "auto"); 
-                    }
+                    } else { assignManager(managers[0].id, chat.id, "auto"); }
                 }
             }
         });
@@ -616,12 +640,12 @@
     }
     function addPromoField(title='', text='', index=Date.now()) {
         const div = document.createElement('div'); div.className = 'setting-card';
-        div.innerHTML = `<div class="card-header"><span class="card-title">Промо-код</span><button onclick="this.parentElement.parentElement.remove()" class="btn-remove">✕</button></div><div class="input-group"><label>Назва</label><input type="text" class="styled-input promo-title" value="${title}" placeholder="Знижка 10%"></div><div class="input-group"><label>Текст SMS</label><textarea class="styled-textarea promo-text" placeholder="Ваш код: SALE10">${text}</textarea></div>`;
+        div.innerHTML = `<div class="card-header"><span class="card-title">Промо-код</span><button onclick="this.parentElement.parentElement.remove()" class="btn-remove">✕</button></div><div class="input-group"><label>Назва (для списку)</label><input type="text" class="styled-input promo-title" value="${title}" placeholder="Знижка 10%"></div><div class="input-group"><label>Текст SMS</label><textarea class="styled-textarea promo-text" placeholder="Ваш код: SALE10">${text}</textarea></div>`;
         document.getElementById('promosList').appendChild(div);
     }
     function addScriptField(title='', text='', index=Date.now()) {
         const div = document.createElement('div'); div.className = 'setting-card';
-        div.innerHTML = `<div class="card-header"><span class="card-title">Скрипт</span><button onclick="this.parentElement.parentElement.remove()" class="btn-remove">✕</button></div><div class="input-group"><label>Назва</label><input type="text" class="styled-input script-title" value="${title}" placeholder="Привітання"></div><div class="input-group"><label>Текст</label><textarea class="styled-textarea script-text" placeholder="Доброго дня...">${text}</textarea></div>`;
+        div.innerHTML = `<div class="card-header"><span class="card-title">Скрипт</span><button onclick="this.parentElement.parentElement.remove()" class="btn-remove">✕</button></div><div class="input-group"><label>Назва кнопки</label><input type="text" class="styled-input script-title" value="${title}" placeholder="Привітання"></div><div class="input-group"><label>Текст відповіді</label><textarea class="styled-textarea script-text" placeholder="Доброго дня...">${text}</textarea></div>`;
         document.getElementById('scriptsList').appendChild(div);
     }
     function addFaqField(q='', a='', index=Date.now()) {
