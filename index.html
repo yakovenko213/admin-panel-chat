@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latiao Admin Pro</title>
+    <title>Latiao Admin Pro v2</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -112,6 +112,16 @@
             border-radius: 50%;
         }
 
+        .assigned-tag {
+            font-size: 10px;
+            background: #eef2f5;
+            color: #555;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+            border: 1px solid #ddd;
+        }
+
         .settings-btn {
             background: none;
             border: none;
@@ -135,6 +145,17 @@
             justify-content: space-between;
             padding: 0 20px;
         }
+        
+        .manager-select {
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+            background: #fff;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
         .messages-area {
             flex: 1;
             padding: 20px;
@@ -191,16 +212,15 @@
 <div id="settingsModal" class="modal">
     <div class="modal-content">
         <h3>Налаштування менеджерів</h3>
-        <p style="font-size:12px; color:#666;">Додайте Telegram Chat ID менеджерів для сповіщень.</p>
+        <p style="font-size:12px; color:#666;">Додайте Telegram Chat ID менеджерів.</p>
         
-        <div id="managersList">
-            </div>
+        <div id="managersList"></div>
         
         <button class="btn-sm" onclick="addManagerField()" style="margin-top:10px;">+ Додати менеджера</button>
 
         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
         
-        <label style="font-size:12px; font-weight:bold;">Telegram Bot Token (для розсилки):</label>
+        <label style="font-size:12px; font-weight:bold;">Telegram Bot Token:</label>
         <input type="text" id="tgTokenInput" placeholder="123456:ABC-DEF..." style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box; border:1px solid #ddd; border-radius:4px;">
 
         <button class="btn-save" onclick="saveSettings()">Зберегти</button>
@@ -232,11 +252,15 @@
 
 <div class="main">
     <div class="chat-header" id="chatHeader" style="display:none;">
-        <div>
-            <strong id="chatUserTitle">...</strong>
-            <div style="font-size:12px; color:#666;" id="chatUserStatus">Офлайн</div>
+        <div style="display:flex; align-items:center;">
+            <div>
+                <strong id="chatUserTitle">...</strong>
+            </div>
+            <select id="managerSelect" class="manager-select" onchange="assignManager(this.value)">
+                <option value="">Не призначено</option>
+            </select>
         </div>
-        <button onclick="archiveChat()" class="btn-sm">Видалити</button>
+        <button onclick="archiveChat()" class="btn-sm" style="background:#fff; border:1px solid #ddd; color:red;">Видалити</button>
     </div>
 
     <div class="messages-area" id="messagesArea">
@@ -273,9 +297,17 @@
         snap.forEach(child => {
             allChats.push({ id: child.key, ...child.val() });
         });
-        // Сортуємо: нові зверху
+        // Sort: newest first
         allChats.sort((a, b) => b.ts - a.ts);
         renderChatList();
+        
+        // If chat is open, update dropdown just in case
+        if(currentChatId) {
+             const currentChatData = allChats.find(c => c.id === currentChatId);
+             if(currentChatData) {
+                 document.getElementById('managerSelect').value = currentChatData.assignedTo || "";
+             }
+        }
     });
 
     // --- Rendering ---
@@ -286,13 +318,8 @@
         container.innerHTML = '';
 
         const filtered = allChats.filter(chat => {
-            // Фільтр пошуку
             const matchSearch = chat.id.toLowerCase().includes(search) || (chat.lastMsg && chat.lastMsg.toLowerCase().includes(search));
-            
-            // Фільтр вкладок
-            if (filterType === 'unread') {
-                return matchSearch && chat.unread === true;
-            }
+            if (filterType === 'unread') return matchSearch && chat.unread === true;
             return matchSearch;
         });
 
@@ -305,11 +332,18 @@
             const div = document.createElement('div');
             const time = new Date(chat.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
+            // Find manager name if assigned
+            let managerName = "";
+            if (chat.assignedTo) {
+                const mgr = managers.find(m => m.id == chat.assignedTo);
+                if (mgr) managerName = `<span class="assigned-tag">👤 ${mgr.name}</span>`;
+            }
+
             div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''} ${chat.unread ? 'unread' : ''}`;
             div.onclick = () => openChat(chat.id);
             div.innerHTML = `
                 <div style="display:flex; justify-content:space-between;">
-                    <strong>${chat.id.substring(0,8)}...</strong>
+                    <strong>${chat.id.substring(0,8)}... ${managerName}</strong>
                     <span style="font-size:11px; color:#999;">${time}</span>
                 </div>
                 <div style="font-size:12px; color:#666; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; margin-top:2px;">
@@ -332,15 +366,22 @@
 
     function openChat(chatId) {
         currentChatId = chatId;
-        renderChatList(); // Update active highlight
+        renderChatList(); 
+        
+        const chatData = allChats.find(c => c.id === chatId);
 
-        // Mark as read
-        db.ref('active_chats/' + chatId).update({ unread: false });
-
+        // UI Setup
         document.getElementById('chatHeader').style.display = 'flex';
         document.getElementById('inputArea').style.display = 'flex';
         document.getElementById('chatUserTitle').innerText = 'Клієнт: ' + chatId;
         
+        // Update Select Dropdown options & value
+        updateManagerDropdown(chatData ? chatData.assignedTo : "");
+
+        // Mark as read
+        db.ref('active_chats/' + chatId).update({ unread: false });
+
+        // Load Messages
         const area = document.getElementById('messagesArea');
         area.innerHTML = '<div style="text-align:center; padding:20px;">Завантаження...</div>';
 
@@ -360,17 +401,55 @@
         });
     }
 
+    function updateManagerDropdown(assignedId) {
+        const select = document.getElementById('managerSelect');
+        select.innerHTML = '<option value="">Не призначено</option>';
+        
+        managers.forEach(mgr => {
+            const opt = document.createElement('option');
+            opt.value = mgr.id;
+            opt.innerText = mgr.name;
+            select.appendChild(opt);
+        });
+        
+        select.value = assignedId || "";
+    }
+
+    function assignManager(managerId) {
+        if(!currentChatId) return;
+
+        // 1. Update DB
+        db.ref('active_chats/' + currentChatId).update({ assignedTo: managerId });
+
+        // 2. Notify via Telegram
+        if (managerId && tgBotToken) {
+            const mgr = managers.find(m => m.id == managerId);
+            if (mgr) {
+                const text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\n\nМенеджер: ${mgr.name}\nКлієнт ID: \`${currentChatId}\`\n\nЗайдіть в адмінку, щоб відповісти.`;
+                
+                fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        chat_id: managerId,
+                        text: text,
+                        parse_mode: 'Markdown'
+                    })
+                }).then(res => {
+                    console.log("Notification sent");
+                }).catch(err => console.error("TG Error", err));
+            }
+        }
+    }
+
     function sendMessage() {
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
         if (!text || !currentChatId) return;
 
         const ts = Date.now();
-        // Send to history
         db.ref('support/' + currentChatId).push({ text, type: 'admin', ts });
-        // Update list preview
         db.ref('active_chats/' + currentChatId).update({ lastMsg: 'Ви: ' + text, ts, unread: false });
-
         input.value = '';
     }
 
@@ -386,7 +465,7 @@
         }
     }
 
-    // --- Settings & Managers Logic ---
+    // --- Settings Logic ---
     function openSettings() {
         document.getElementById('settingsModal').style.display = 'flex';
         renderManagersInputs();
@@ -401,7 +480,7 @@
         list.innerHTML = '';
         document.getElementById('tgTokenInput').value = tgBotToken;
 
-        managers.forEach((mgr, index) => {
+        managers.forEach((mgr) => {
             addManagerField(mgr.name, mgr.id);
         });
         if (managers.length === 0) addManagerField();
@@ -429,12 +508,16 @@
         
         const token = document.getElementById('tgTokenInput').value.trim();
 
-        // Save to Firebase (so all admins share settings)
         db.ref('config/managers').set(newManagers);
         db.ref('config/tg_token').set(token);
         
+        // Update local state instantly
         managers = newManagers;
         tgBotToken = token;
+        
+        // Re-render chat UI if open (to update select options)
+        if(currentChatId) openChat(currentChatId);
+
         closeSettings();
         alert('Налаштування збережено!');
     }
@@ -444,35 +527,6 @@
             const cfg = snap.val() || {};
             managers = cfg.managers || [];
             tgBotToken = cfg.tg_token || "";
-        });
-    }
-
-    // --- Notification Helper (Optional) ---
-    // Це можна використовувати, якщо ви хочете, щоб АДМІНКА надсилала сповіщення в ТГ, 
-    // коли пише КЛІЄНТ (але для цього треба Cloud Functions, або простий хак нижче)
-    
-    // Приклад: прослуховування нових повідомлень від юзерів для нотифікації менеджерів
-    // Увага: У браузерній версії це працюватиме, тільки якщо вкладка Адмінки відкрита
-    db.ref('active_chats').on('child_changed', snap => {
-        const chat = snap.val();
-        if (chat.unread === true && tgBotToken && managers.length > 0) {
-            // Check restriction (timestamp) to avoid spam on reload
-            if (chat.ts > Date.now() - 2000) { 
-                sendTelegramAlert(chat.id, chat.lastMsg);
-            }
-        }
-    });
-
-    function sendTelegramAlert(userId, text) {
-        managers.forEach(mgr => {
-            fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    chat_id: mgr.id,
-                    text: `🔥 Нове повідомлення від ${userId}:\n"${text}"\n\nПризначено для: ${mgr.name}`
-                })
-            });
         });
     }
 
