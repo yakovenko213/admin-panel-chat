@@ -2,8 +2,8 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latiao Admin: Super-Admin Log</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Latiao Admin Mobile</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -17,25 +17,30 @@
         }
 
         body {
-            font-family: -apple-system, system-ui, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             margin: 0;
             display: flex;
             height: 100vh;
+            height: 100dvh; /* Для мобільних браузерів */
             overflow: hidden;
         }
 
-        /* --- Sidebar --- */
+        /* --- Sidebar (Chat List) --- */
         .sidebar {
-            width: 320px;
+            width: 350px;
             background: var(--sidebar-bg);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+            z-index: 2;
         }
 
         .sidebar-header {
             padding: 15px;
+            background: #fff;
             border-bottom: 1px solid var(--border);
         }
 
@@ -43,208 +48,155 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
-        .search-box {
-            position: relative;
-            margin-bottom: 10px;
-        }
+        .search-box { position: relative; margin-bottom: 10px; }
         .search-box input {
-            width: 100%;
-            padding: 8px 30px 8px 10px;
-            box-sizing: border-box;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            background: #f9f9f9;
+            width: 100%; padding: 10px 35px 10px 12px;
+            box-sizing: border-box; border: 1px solid #ddd;
+            border-radius: 10px; background: #f9f9f9; font-size: 16px; /* 16px to prevent zoom on iOS */
         }
-        .search-box span {
-            position: absolute;
-            right: 10px;
-            top: 8px;
-            color: #999;
-            font-size: 14px;
-        }
+        .search-box span { position: absolute; right: 10px; top: 10px; color: #999; }
 
-        .filters {
-            display: flex;
-            gap: 5px;
-            background: #f0f0f0;
-            padding: 4px;
-            border-radius: 8px;
-        }
+        .filters { display: flex; gap: 5px; background: #f0f0f0; padding: 4px; border-radius: 10px; }
         .filter-btn {
-            flex: 1;
-            background: none;
-            border: none;
-            padding: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            color: #666;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: 0.2s;
+            flex: 1; background: none; border: none; padding: 8px;
+            cursor: pointer; font-size: 13px; color: #666;
+            border-radius: 8px; font-weight: 600; transition: 0.2s;
         }
-        .filter-btn.active {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
+        .filter-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-        .chat-list {
-            flex: 1;
-            overflow-y: auto;
-        }
+        .chat-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
         .chat-item {
-            padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: 0.2s;
-            position: relative;
+            padding: 16px; border-bottom: 1px solid #f0f0f0;
+            cursor: pointer; position: relative; background: #fff;
         }
-        .chat-item:hover { background: #f9f9f9; }
-        .chat-item.active { background: var(--active-item); border-left: 3px solid var(--primary); }
-        .chat-item.unread { font-weight: bold; background: #fffcfc; }
-        .chat-item.unread::after {
-            content: '';
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 8px;
-            height: 8px;
-            background: var(--primary);
-            border-radius: 50%;
-        }
+        .chat-item:active { background: #f5f5f5; }
+        .chat-item.active { background: var(--active-item); border-left: 4px solid var(--primary); }
+        .chat-item.unread { background: #fffcfc; }
+        .chat-item.unread strong { color: var(--primary); }
         
-        .chat-item.closed {
-            opacity: 0.7;
-            background: #f8f9fa;
-        }
-        .chat-item.closed strong {
-            color: #666;
-        }
+        .chat-item.closed { opacity: 0.7; background: #f8f9fa; }
 
         .assigned-tag {
-            font-size: 10px;
-            background: #eef2f5;
-            color: #555;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: 5px;
-            border: 1px solid #ddd;
+            font-size: 10px; background: #eef2f5; color: #555;
+            padding: 2px 6px; border-radius: 4px; margin-left: 5px; border: 1px solid #ddd;
+            vertical-align: middle;
         }
 
-        .settings-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 18px;
-            color: #666;
-        }
-
-        /* --- Main Area --- */
+        /* --- Main Area (Chat Window) --- */
         .main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #fff;
+            flex: 1; display: flex; flex-direction: column;
+            background: #fff; position: relative;
+            z-index: 1;
         }
+
         .chat-header {
-            height: 60px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
+            height: 60px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px; background: #fff;
+            flex-shrink: 0;
+        }
+
+        /* Back Button (Mobile Only) */
+        .back-btn {
+            display: none; /* Hidden on desktop */
+            background: none; border: none; font-size: 24px;
+            color: #333; cursor: pointer; padding: 0 10px 0 0;
         }
         
+        .header-left { display: flex; align-items: center; overflow: hidden; }
+        .header-title-box { display: flex; flex-direction: column; overflow: hidden; }
+        .header-title-box strong { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
         .manager-select {
-            padding: 5px 10px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            font-size: 13px;
-            background: #fff;
-            margin-left: 10px;
-            cursor: pointer;
+            padding: 4px; border-radius: 6px; border: 1px solid #ddd;
+            font-size: 12px; background: #fff; margin-top: 2px;
         }
         
+        .header-right { display: flex; gap: 8px; }
         .status-btn {
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            cursor: pointer;
-            border: none;
-            margin-right: 10px;
-            font-weight: 600;
-            transition: 0.2s;
+            padding: 6px 12px; border-radius: 6px; font-size: 12px;
+            cursor: pointer; border: none; font-weight: 600;
         }
         .btn-close-chat { background: #e0f7fa; color: #006064; }
-        .btn-close-chat:hover { background: #b2ebf2; }
         .btn-open-chat { background: #ffebee; color: #c62828; }
-        .btn-open-chat:hover { background: #ffcdd2; }
+        
+        .btn-icon { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
 
         .messages-area {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background: #f4f7f6;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            flex: 1; padding: 15px; overflow-y: auto;
+            background: #f4f7f6; display: flex; flex-direction: column; gap: 10px;
+            -webkit-overflow-scrolling: touch;
         }
+
         .msg {
-            max-width: 60%;
-            padding: 10px 14px;
-            border-radius: 14px;
-            font-size: 14px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
+            max-width: 75%; padding: 10px 14px; border-radius: 16px;
+            font-size: 15px; position: relative; display: flex; flex-direction: column;
+            word-wrap: break-word;
         }
-        .msg.user { align-self: flex-start; background: #fff; border: 1px solid #ddd; border-bottom-left-radius: 2px; }
-        .msg.admin { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
+        .msg.user { align-self: flex-start; background: #fff; border: 1px solid #eee; border-bottom-left-radius: 4px; }
+        .msg.admin { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
         
-        .msg-time {
-            font-size: 10px;
-            margin-top: 4px;
-            align-self: flex-end;
-            opacity: 0.7;
-        }
+        .msg-time { font-size: 10px; margin-top: 4px; align-self: flex-end; opacity: 0.7; }
         .msg.admin .msg-time { color: rgba(255,255,255, 0.9); }
         .msg.user .msg-time { color: #999; }
 
         .input-area {
-            padding: 15px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            gap: 10px;
+            padding: 10px; border-top: 1px solid var(--border);
+            display: flex; gap: 10px; background: #fff;
+            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Safe area for iPhone X+ */
         }
-        .input-area input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
-        .send-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; }
+        .input-area input {
+            flex: 1; padding: 12px 15px; border: 1px solid #ddd;
+            border-radius: 24px; outline: none; font-size: 16px; background: #f9f9f9;
+        }
+        .send-btn {
+            background: var(--primary); color: white; border: none;
+            width: 48px; height: 48px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
 
-        /* --- Modal Settings --- */
+        /* --- Settings Modal --- */
         .modal {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
             align-items: center; justify-content: center;
         }
         .modal-content {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            width: 400px;
+            background: white; padding: 25px; border-radius: 16px;
+            width: 90%; max-width: 400px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-        .modal h3 { margin-top: 0; }
-        .manager-row { display: flex; gap: 5px; margin-bottom: 5px; }
-        .manager-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        .btn-sm { padding: 5px 10px; cursor: pointer; background: #ddd; border: none; border-radius: 4px; }
-        .btn-save { background: var(--primary); color: white; width: 100%; padding: 10px; margin-top: 15px; border: none; border-radius: 6px; cursor: pointer; }
-        .lbl { font-size:12px; font-weight:bold; display:block; margin-top:10px; margin-bottom:4px;}
+        .manager-row { display: flex; gap: 5px; margin-bottom: 8px; }
+        .manager-row input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .btn-save {
+            background: var(--primary); color: white; width: 100%;
+            padding: 12px; margin-top: 15px; border: none; border-radius: 10px;
+            font-size: 16px; font-weight: bold;
+        }
+
+        /* --- MOBILE ADAPTATION --- */
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: 100%; position: absolute; }
+            .main { width: 100%; height: 100%; position: absolute; transform: translateX(100%); transition: transform 0.3s ease; }
+            
+            /* Class toggled via JS */
+            body.chat-open .sidebar { transform: translateX(-30%); display: none; } 
+            body.chat-open .main { transform: translateX(0); }
+            
+            .back-btn { display: block; }
+            .header-title-box { max-width: 140px; }
+            .status-btn span { display: none; } /* Show only icon on small screens if needed, or keep text short */
+            .status-btn { padding: 8px; }
+            .status-btn::after { content: "✓"; } /* Short status for mobile */
+            .btn-open-chat::after { content: "↺"; }
+            
+            .chat-header { padding: 0 10px; }
+        }
     </style>
 </head>
 <body>
@@ -253,29 +205,28 @@
     <div class="modal-content">
         <h3>Налаштування</h3>
         
-        <label class="lbl">Менеджери:</label>
+        <label style="font-size:12px; font-weight:bold;">Менеджери:</label>
         <div id="managersList"></div>
-        <button class="btn-sm" onclick="addManagerField()">+ Додати</button>
+        <button onclick="addManagerField()" style="background:#eee; border:none; padding:8px; border-radius:6px; width:100%; margin-top:5px;">+ Додати</button>
 
         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
         
-        <label class="lbl">Telegram Bot Token:</label>
-        <input type="text" id="tgTokenInput" placeholder="123456:ABC-DEF..." style="width:100%; padding:8px; box-sizing:border-box; border:1px solid #ddd; border-radius:4px;">
+        <label style="font-size:12px; font-weight:bold;">Telegram Bot Token:</label>
+        <input type="text" id="tgTokenInput" placeholder="Token..." style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
         
-        <label class="lbl">Admin ID (для логів):</label>
-        <input type="text" id="adminIdInput" placeholder="Твій Telegram ID" style="width:100%; padding:8px; box-sizing:border-box; border:1px solid #ddd; border-radius:4px;">
-        <small style="color:#999; font-size:10px;">Введи сюди свій ID, щоб отримувати копії сповіщень про призначення.</small>
+        <label style="font-size:12px; font-weight:bold;">Admin ID (для логів):</label>
+        <input type="text" id="adminIdInput" placeholder="ID..." style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px;">
 
         <button class="btn-save" onclick="saveSettings()">Зберегти</button>
-        <button class="btn-sm" onclick="closeSettings()" style="width:100%; margin-top:5px; background:white;">Закрити</button>
+        <button onclick="closeSettings()" style="width:100%; margin-top:10px; background:white; border:1px solid #ddd; padding:12px; border-radius:10px;">Закрити</button>
     </div>
 </div>
 
 <div class="sidebar">
     <div class="sidebar-header">
         <div class="top-row">
-            <h2 style="margin:0; font-size:18px;">Latiao Admin</h2>
-            <button class="settings-btn" onclick="openSettings()">⚙️</button>
+            <h2 style="margin:0; font-size:20px;">Latiao Admin</h2>
+            <button class="settings-btn" onclick="openSettings()" style="background:none; border:none; font-size:22px;">⚙️</button>
         </div>
         
         <div class="search-box">
@@ -295,31 +246,31 @@
 </div>
 
 <div class="main">
-    <div class="chat-header" id="chatHeader" style="display:none;">
-        <div style="display:flex; align-items:center;">
-            <div>
+    <div class="chat-header" id="chatHeader">
+        <div class="header-left">
+            <button class="back-btn" onclick="closeChatMobile()">⬅</button>
+            <div class="header-title-box">
                 <strong id="chatUserTitle">...</strong>
+                <select id="managerSelect" class="manager-select" onchange="manualAssign(this.value)">
+                    <option value="">Немає</option>
+                </select>
             </div>
-            
-            <select id="managerSelect" class="manager-select" onchange="manualAssign(this.value)">
-                <option value="">Не призначено</option>
-            </select>
         </div>
 
-        <div>
-            <button id="statusBtn" class="status-btn btn-close-chat" onclick="toggleChatStatus()">✅ Завершити</button>
-            <button onclick="archiveChat()" class="btn-sm" style="background:#fff; border:1px solid #ddd; color:red;">Видалити</button>
+        <div class="header-right">
+            <button id="statusBtn" class="status-btn btn-close-chat" onclick="toggleChatStatus()"></button>
+            <button onclick="archiveChat()" class="btn-icon" style="color:red;">🗑</button>
         </div>
     </div>
 
     <div class="messages-area" id="messagesArea">
         <div style="display:flex; flex:1; align-items:center; justify-content:center; color:#999;">
-            Оберіть чат для початку роботи
+            Оберіть чат
         </div>
     </div>
 
-    <div class="input-area" id="inputArea" style="display:none;">
-        <input type="text" id="msgInput" placeholder="Напишіть повідомлення..." onkeypress="handleEnter(event)">
+    <div class="input-area" id="inputArea">
+        <input type="text" id="msgInput" placeholder="Повідомлення..." onkeypress="handleEnter(event)">
         <button class="send-btn" onclick="sendMessage()">➤</button>
     </div>
 </div>
@@ -337,7 +288,7 @@
     let filterType = 'open'; 
     let managers = [];
     let tgBotToken = "";
-    let superAdminId = ""; // Твій ID для логів
+    let superAdminId = ""; 
 
     // --- Init ---
     loadSettings();
@@ -348,13 +299,11 @@
         allChats = [];
         snap.forEach(child => {
             const chatObj = { id: child.key, ...child.val() };
-            
-            // Instant Assign if new and empty
+            // Instant Assign
             if (!chatObj.assignedTo && (chatObj.status !== 'closed') && managers.length > 0) {
                 assignManager(managers[0].id, chatObj.id, "auto");
                 chatObj.assignedTo = managers[0].id;
             }
-
             allChats.push(chatObj);
         });
         
@@ -381,7 +330,6 @@
         const filtered = allChats.filter(chat => {
             const matchSearch = chat.id.toLowerCase().includes(search) || (chat.lastMsg && chat.lastMsg.toLowerCase().includes(search));
             const status = chat.status || 'open';
-
             if (filterType === 'open') return matchSearch && status !== 'closed';
             if (filterType === 'closed') return matchSearch && status === 'closed';
             return matchSearch; 
@@ -401,7 +349,7 @@
                 const mgr = managers.find(m => m.id == chat.assignedTo);
                 if (mgr) managerName = `<span class="assigned-tag">👤 ${mgr.name}</span>`;
             } else if ((chat.status || 'open') !== 'closed') {
-                 managerName = `<span class="assigned-tag" style="background:#fff3cd; color:#856404;">⚠️ Вільний</span>`;
+                 managerName = `<span class="assigned-tag" style="background:#fff3cd; color:#856404;">⚠️</span>`;
             }
             
             const isClosed = chat.status === 'closed';
@@ -413,7 +361,7 @@
                     <strong>${chat.id.substring(0,8)}... ${managerName}</strong>
                     <span style="font-size:11px; color:#999;">${time}</span>
                 </div>
-                <div style="font-size:12px; color:#666; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; margin-top:2px;">
+                <div style="font-size:13px; color:#666; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; margin-top:4px;">
                     ${chat.lastMsg || 'Вкладення...'}
                 </div>
             `;
@@ -436,18 +384,18 @@
         currentChatId = chatId;
         renderChatList(); 
         
+        // Mobile UI Toggle
+        document.body.classList.add('chat-open');
+        
         const chatData = allChats.find(c => c.id === chatId);
         const status = chatData ? (chatData.status || 'open') : 'open';
         currentChatStatus = status;
 
-        document.getElementById('chatHeader').style.display = 'flex';
-        document.getElementById('inputArea').style.display = 'flex';
-        document.getElementById('chatUserTitle').innerText = 'Клієнт: ' + chatId;
+        document.getElementById('chatUserTitle').innerText = 'ID: ' + chatId.substring(0,6);
         
         updateManagerDropdown(chatData ? chatData.assignedTo : "");
         updateStatusButtonUI(status);
 
-        // Mark as read
         db.ref('active_chats/' + chatId).update({ unread: false });
 
         const area = document.getElementById('messagesArea');
@@ -464,6 +412,12 @@
             });
             area.scrollTop = area.scrollHeight;
         });
+    }
+
+    // Mobile: Back to list
+    function closeChatMobile() {
+        document.body.classList.remove('chat-open');
+        // Optional: currentChatId = null; 
     }
 
     function renderMessage(msg, container) {
@@ -486,10 +440,8 @@
     function updateStatusButtonUI(status) {
         const btn = document.getElementById('statusBtn');
         if (status === 'closed') {
-            btn.innerText = '🔄 Відновити чат';
             btn.className = 'status-btn btn-open-chat';
         } else {
-            btn.innerText = '✅ Завершити';
             btn.className = 'status-btn btn-close-chat';
         }
     }
@@ -500,12 +452,15 @@
         db.ref('active_chats/' + currentChatId).update({ status: newStatus });
         currentChatStatus = newStatus;
         updateStatusButtonUI(newStatus);
+        
+        // If finishing chat on mobile, maybe go back to list?
+        // closeChatMobile(); 
     }
 
     // --- Manager Logic ---
     function updateManagerDropdown(assignedId) {
         const select = document.getElementById('managerSelect');
-        select.innerHTML = '<option value="">Не призначено</option>';
+        select.innerHTML = '<option value="">Немає</option>';
         managers.forEach(mgr => {
             const opt = document.createElement('option');
             opt.value = mgr.id;
@@ -527,20 +482,16 @@
             const mgr = managers.find(m => m.id == managerId);
             const managerName = mgr ? mgr.name : "Невідомий";
             
-            // 1. Сповіщення призначеному менеджеру
             if (managerId && mgr) {
                 let text = "";
-                if (reason === "manual") text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\n\nКлієнт ID: \`${chatId}\``;
-                else if (reason === "timeout") text = `🚨 *ПЕРЕДАЧА ЧАТУ*\n\nКлієнт: \`${chatId}\`\nПопередній менеджер не відповів.`;
-                else if (reason === "auto") text = `⚡ *НОВИЙ ЧАТ*\n\nКлієнт: \`${chatId}\`\nПризначено вам автоматично.`;
-
+                if (reason === "manual") text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\nID: \`${chatId}\``;
+                else if (reason === "timeout") text = `🚨 *ПЕРЕДАЧА ЧАТУ*\nID: \`${chatId}\`\n(Таймаут)`;
+                else if (reason === "auto") text = `⚡ *НОВИЙ ЧАТ*\nID: \`${chatId}\``;
                 sendTelegram(managerId, text);
             }
 
-            // 2. Сповіщення Супер-Адміну (Лог)
-            // Надсилаємо, якщо Адмін заданий І Адмін це не той самий менеджер, якому призначили (щоб не дублювати)
             if (superAdminId && superAdminId !== managerId) {
-                let adminText = `👮‍♂️ *ADMIN LOG*\n\nЧат: \`${chatId}\`\nКому призначено: *${managerName}*\nПричина: ${reason}`;
+                let adminText = `👮‍♂️ *LOG* | ${managerName} | ${reason}\nID: \`${chatId}\``;
                 sendTelegram(superAdminId, adminText);
             }
         }
@@ -554,10 +505,9 @@
         }).catch(console.error);
     }
 
-    // --- AUTO PILOT LOGIC ---
+    // --- AUTO PILOT ---
     function checkAutoReassignment() {
         if (managers.length === 0) return; 
-
         const NOW = Date.now();
         const TIMEOUT = 5 * 60 * 1000; 
 
@@ -608,28 +558,24 @@
 
     function archiveChat() {
         if (!currentChatId) return;
-        if(confirm('Видалити чат з історії назавжди?')) {
+        if(confirm('Видалити назавжди?')) {
             db.ref('active_chats/' + currentChatId).remove();
-            location.reload();
+            if(document.body.classList.contains('chat-open')) closeChatMobile();
         }
     }
 
-    // --- Settings Logic ---
+    // --- Settings ---
     function openSettings() {
         document.getElementById('settingsModal').style.display = 'flex';
         renderManagersInputs();
     }
-
-    function closeSettings() {
-        document.getElementById('settingsModal').style.display = 'none';
-    }
+    function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
     function renderManagersInputs() {
         const list = document.getElementById('managersList');
         list.innerHTML = '';
         document.getElementById('tgTokenInput').value = tgBotToken;
-        document.getElementById('adminIdInput').value = superAdminId; // Load Admin ID
-
+        document.getElementById('adminIdInput').value = superAdminId;
         managers.forEach((mgr) => addManagerField(mgr.name, mgr.id));
         if (managers.length === 0) addManagerField();
     }
@@ -639,8 +585,8 @@
         div.className = 'manager-row';
         div.innerHTML = `
             <input type="text" placeholder="Ім'я" class="mgr-name" value="${name}" style="width:30%">
-            <input type="text" placeholder="Telegram Chat ID" class="mgr-id" value="${id}" style="flex:1">
-            <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
+            <input type="text" placeholder="Telegram ID" class="mgr-id" value="${id}" style="flex:1">
+            <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; font-size:18px;">✕</button>
         `;
         document.getElementById('managersList').appendChild(div);
     }
@@ -658,7 +604,7 @@
 
         db.ref('config/managers').set(newManagers);
         db.ref('config/tg_token').set(token);
-        db.ref('config/admin_id').set(adminId); // Save Admin ID
+        db.ref('config/admin_id').set(adminId);
         
         managers = newManagers;
         tgBotToken = token;
@@ -666,7 +612,7 @@
         
         if(currentChatId) openChat(currentChatId);
         closeSettings();
-        alert('Налаштування збережено!');
+        alert('Збережено!');
     }
 
     function loadSettings() {
