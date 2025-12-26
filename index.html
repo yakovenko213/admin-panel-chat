@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM</title>
+    <title>Latiao CRM v2.1</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -70,13 +70,42 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
 
-        .user-info-badge {
-            font-size: 12px; color: #666; background: #eee;
-            padding: 4px 8px; border-radius: 12px;
+        .user-info-box {
+            display: flex; flex-direction: column;
         }
+        .user-info-badge {
+            font-size: 12px; color: #666; background: #f0f2f5;
+            padding: 4px 8px; border-radius: 12px; display: inline-block;
+            margin-top: 4px; max-width: fit-content;
+        }
+
+        /* --- NEW BUTTON STYLES --- */
+        .header-actions {
+            display: flex; gap: 8px;
+        }
+        
+        .icon-btn {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #f0f2f5;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .icon-btn:hover {
+            background: #e4e6eb; transform: scale(1.05);
+        }
+        
+        /* Logout button special style */
+        .logout-btn:hover {
+            background: #ffebee; color: red;
+        }
+
+        /* ----------------------- */
 
         .search-box { position: relative; margin-bottom: 10px; }
         .search-box input {
@@ -310,13 +339,15 @@
 <div class="sidebar">
     <div class="sidebar-header">
         <div class="top-row">
-            <div style="display:flex; flex-direction:column;">
+            <div class="user-info-box">
                 <h2 style="margin:0; font-size:20px;">Latiao Admin</h2>
                 <span id="currentUserDisplay" class="user-info-badge">Гість</span>
             </div>
             
-            <button id="btnSettings" class="settings-btn" onclick="openSettings()" style="background:none; border:none; font-size:22px; display:none;">⚙️</button>
-            <button onclick="logout()" style="background:none; border:none; font-size:18px; margin-left:10px;">🚪</button>
+            <div class="header-actions">
+                <button id="btnSettings" class="icon-btn" onclick="openSettings()" title="Налаштування" style="display:none;">⚙️</button>
+                <button class="icon-btn logout-btn" onclick="logout()" title="Вийти">🚪</button>
+            </div>
         </div>
         
         <div class="search-box">
@@ -424,10 +455,7 @@
             } else {
                 // Check DB
                 found = mgrs.find(m => m.login === login && m.password === pass);
-                // In DB we can save a field 'role' if needed, or assume first user is admin?
-                // For now, let's assume 'admin' login is the only admin, OR add role logic.
-                // Let's rely on the hardcoded 'admin' for settings access, OR check property.
-                if (found && found.login === 'admin') role = 'admin'; // Or store role in DB
+                if (found && found.login === 'admin') role = 'admin'; 
             }
 
             if (found) {
@@ -454,7 +482,7 @@
         document.getElementById('currentUserDisplay').innerText = currentUser.name;
         
         if (currentUser.role === 'admin') {
-            document.getElementById('btnSettings').style.display = 'block';
+            document.getElementById('btnSettings').style.display = 'flex';
             document.getElementById('currentUserDisplay').style.background = '#ffebee';
             document.getElementById('currentUserDisplay').style.color = 'red';
             document.getElementById('currentUserDisplay').innerText += ' (Admin)';
