@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM v5.0 (TurboSMS)</title>
+    <title>Latiao CRM v5.1 (TurboSMS Fix)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -105,7 +105,6 @@
             gap: 10px; align-items: center; animation: slideDown 0.3s ease; flex-shrink: 0;
         }
         @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        
         .sms-input { padding: 8px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; width: 140px; }
         .sms-select { padding: 8px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; flex: 1; }
         .btn-send-sms { background: #1565c0; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; }
@@ -439,14 +438,11 @@
         currentChatStatus = status;
         document.getElementById('chatUserTitle').innerText = 'Клієнт #' + chatId.substring(0,6);
         
-        // Auto-fill phone if ChatID looks like phone
         if (/^\d{10,12}$/.test(chatId)) {
             document.getElementById('smsPhoneInput').value = chatId;
         } else {
             document.getElementById('smsPhoneInput').value = "";
         }
-        
-        // Hide SMS panel by default when opening new chat
         document.getElementById('smsPanel').style.display = 'none';
 
         updateManagerDropdown(chatData ? chatData.assignedTo : "");
@@ -469,7 +465,6 @@
         const p = document.getElementById('smsPanel');
         p.style.display = p.style.display === 'none' ? 'flex' : 'none';
         
-        // Populate Select
         const sel = document.getElementById('smsPromoSelect');
         sel.innerHTML = '<option value="">Оберіть промо-код...</option>';
         savedPromos.forEach(pr => {
@@ -487,8 +482,6 @@
 
         if (!phone || !text) return alert("Введіть номер та оберіть промо-код");
 
-        // Send API Request
-        // Using direct fetch. Note: This might trigger CORS in browser.
         fetch("https://api.turbosms.ua/message/send.json", {
             method: "POST",
             headers: {
@@ -502,9 +495,9 @@
         })
         .then(res => res.json())
         .then(data => {
-            if (data.response_code === 0 || data.response_status === "OK") {
+            // FIX: Check for generic SUCCESS or code 800
+            if (data.response_code === 0 || data.response_code === 800 || (data.response_status && data.response_status.includes("SUCCESS"))) {
                 alert("SMS успішно надіслано!");
-                // Add log to chat
                 db.ref('support/' + currentChatId).push({ text: `🎁 SMS надіслано на ${phone}: ${text}`, type: 'admin', ts: Date.now() });
                 toggleSmsPanel();
             } else {
