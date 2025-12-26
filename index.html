@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM v7.0 (Media Edition)</title>
+    <title>Latiao CRM v7.1 (Photo Only)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -118,22 +118,19 @@
         
         /* Media Styles */
         .msg-img { max-width: 100%; border-radius: 10px; cursor: pointer; margin-bottom: 5px; }
-        .audio-player { width: 200px; height: 32px; }
 
         .scripts-bar { display: flex; gap: 8px; padding: 10px 15px; background: #fff; border-top: 1px solid #f0f0f0; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .script-chip { background: #f0f2f5; color: #444; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1px solid #e1e4e8; font-weight: 500; transition: 0.2s; flex-shrink: 0; }
         .script-chip:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* INPUT AREA with MEDIA BUTTONS */
+        /* INPUT AREA */
         .input-area { padding: 10px 15px 15px 15px; display: flex; gap: 8px; background: #fff; padding-bottom: max(15px, env(safe-area-inset-bottom)); align-items: center; }
         .input-area input { flex: 1; padding: 12px 20px; border: 1px solid #ddd; border-radius: 25px; outline: none; font-size: 16px; background: #f9f9f9; transition: 0.2s; }
         .send-btn { background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(230,33,23,0.3); transition: 0.2s; }
         
+        /* Photo Button */
         .media-btn { background: #f0f2f5; color: #555; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; transition: 0.2s; }
-        .media-btn:hover { background: #e4e6eb; }
-        .media-btn.recording { background: #e74c3c; color: white; animation: pulse-red 1.5s infinite; }
-        
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
+        .media-btn:hover { background: #e4e6eb; color: var(--text-dark); }
 
         /* --- SETTINGS MODAL --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
@@ -299,7 +296,6 @@
     <div class="input-area" id="inputArea">
         <input type="file" id="imgUpload" accept="image/*" style="display:none;" onchange="handleImageUpload(this)">
         <button class="media-btn" onclick="document.getElementById('imgUpload').click()">📎</button>
-        <button class="media-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
         
         <input type="text" id="msgInput" placeholder="Повідомлення..." onkeypress="handleEnter(event)">
         <button class="send-btn" onclick="sendMessage()">➤</button>
@@ -315,9 +311,6 @@
     let currentChatId=null, currentChatStatus='open', filterType='open';
     let tgBotToken="", superAdminId="", turboToken="", turboSender="";
     let currentUser=null; const SESSION_TIMEOUT = 24*60*60*1000;
-    
-    // Audio Rec
-    let mediaRecorder, audioChunks = [];
 
     checkSession();
 
@@ -532,32 +525,6 @@
         }
     }
 
-    async function toggleRecording() {
-        const btn = document.getElementById('micBtn');
-        if (!mediaRecorder || mediaRecorder.state === 'inactive') {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        const base64 = reader.result;
-                        sendMessage(base64, 'audio');
-                    };
-                    reader.readAsDataURL(blob);
-                };
-                mediaRecorder.start();
-                btn.classList.add('recording');
-            } catch (err) { alert('Мікрофон недоступний'); }
-        } else {
-            mediaRecorder.stop();
-            btn.classList.remove('recording');
-        }
-    }
-
     function renderQuickScripts() {
         const bar = document.getElementById('quickScripts');
         if (savedScripts.length === 0) { bar.style.display = 'none'; return; }
@@ -574,8 +541,6 @@
         let content = "";
         if (msg.msgType === 'image') {
             content = `<img src="${msg.text}" class="msg-img" onclick="window.open(this.src)">`;
-        } else if (msg.msgType === 'audio') {
-            content = `<audio controls src="${msg.text}" class="audio-player"></audio>`;
         } else {
             content = `<span>${msg.text}</span>`;
         }
@@ -660,7 +625,7 @@
         if (!val || !currentChatId) return;
         const ts = Date.now();
         db.ref('support/' + currentChatId).push({ text: val, type: 'admin', msgType: type, ts });
-        db.ref('active_chats/' + currentChatId).update({ lastMsg: (type === 'text' ? 'Ви: ' + val : (type === 'image' ? '📷 Фото' : '🎤 Голосове')), ts, unread: false, status: 'open' });
+        db.ref('active_chats/' + currentChatId).update({ lastMsg: (type === 'text' ? 'Ви: ' + val : '📷 Фото'), ts, unread: false, status: 'open' });
         input.value = '';
     }
     function handleEnter(e) { if (e.key === 'Enter') sendMessage(); }
