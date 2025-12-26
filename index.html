@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM v5.2 (Promo Stats)</title>
+    <title>Latiao CRM v5.3 (Mobile Polish)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -117,7 +117,7 @@
         .msg-time { font-size: 10px; margin-top: 5px; align-self: flex-end; opacity: 0.7; }
 
         .scripts-bar { display: flex; gap: 8px; padding: 10px 15px; background: #fff; border-top: 1px solid #f0f0f0; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-        .script-chip { background: #f0f2f5; color: #444; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1px solid #e1e4e8; font-weight: 500; transition: 0.2s; }
+        .script-chip { background: #f0f2f5; color: #444; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1px solid #e1e4e8; font-weight: 500; transition: 0.2s; flex-shrink: 0; }
         .script-chip:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
         .input-area { padding: 10px 15px 15px 15px; display: flex; gap: 10px; background: #fff; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
@@ -126,11 +126,18 @@
 
         /* --- SETTINGS MODAL --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: #f8f9fa; width: 95%; max-width: 600px; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
-        .modal-tabs { display: flex; background: #fff; padding: 10px; border-bottom: 1px solid #eee; overflow-x: auto; flex-shrink: 0; }
-        .tab-btn { flex: 1; padding: 10px 15px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-gray); border-radius: 12px; min-width: 80px; transition: 0.2s; font-size: 13px; }
+        
+        .modal-content { 
+            background: #f8f9fa; width: 95%; max-width: 600px; 
+            border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; 
+            max-height: 90vh; box-shadow: 0 20px 50px rgba(0,0,0,0.2); 
+        }
+
+        .modal-tabs { display: flex; background: #fff; padding: 10px; border-bottom: 1px solid #eee; overflow-x: auto; flex-shrink: 0; -webkit-overflow-scrolling: touch; }
+        .tab-btn { flex: 1; padding: 10px 15px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-gray); border-radius: 12px; min-width: 80px; transition: 0.2s; font-size: 13px; white-space: nowrap; }
         .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(230,33,23,0.2); }
-        .tab-content { padding: 20px; overflow-y: auto; display: none; flex: 1; }
+        
+        .tab-content { padding: 20px; overflow-y: auto; display: none; flex: 1; -webkit-overflow-scrolling: touch; }
         .tab-content.active { display: block; }
         
         .setting-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 16px; padding: 15px; margin-bottom: 15px; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
@@ -144,15 +151,13 @@
         .styled-textarea { resize: vertical; min-height: 70px; }
         
         .btn-add { width: 100%; padding: 12px; background: transparent; border: 2px dashed #dce0e5; color: #7f8c8d; font-weight: 600; border-radius: 12px; cursor: pointer; margin-bottom: 20px; }
-        .sticky-footer { padding: 15px; background: #fff; border-top: 1px solid #eee; display: flex; gap: 10px; }
+        .sticky-footer { padding: 15px; background: #fff; border-top: 1px solid #eee; display: flex; gap: 10px; flex-shrink: 0; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
         .btn-save { flex: 2; padding: 12px; background: var(--text-dark); color: white; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
         .btn-close { flex: 1; padding: 12px; background: #f0f2f5; color: #555; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
 
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .stat-box { background: #fff; padding: 15px; border-radius: 16px; text-align: center; border: 1px solid #eee; }
         .stat-num { font-size: 24px; font-weight: 800; display: block; }
-
-        /* Promo Stats List */
         .promo-stats-box { margin-top: 20px; background: #fff; border-radius: 16px; padding: 15px; border: 1px solid #e1e4e8; }
         .promo-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
         .promo-row:last-child { border-bottom: none; }
@@ -169,6 +174,19 @@
             .status-toggle { padding: 0; width: 38px; height: 38px; border-radius: 50%; justify-content: center; }
             #smsPanel { flex-direction: column; align-items: stretch; padding: 15px; }
             .sms-input { width: 100%; }
+            
+            /* --- MOBILE SETTINGS MODAL FIX --- */
+            .modal { align-items: flex-end; } /* Bottom Sheet style */
+            .modal-content { 
+                width: 100%; max-width: 100%; 
+                height: 85vh; max-height: 85vh; 
+                border-radius: 24px 24px 0 0; 
+                margin: 0; /* Remove margin */
+            }
+            .modal-tabs { 
+                position: sticky; top: 0; z-index: 10; 
+                background: #fff; 
+            }
         }
     </style>
 </head>
@@ -223,7 +241,6 @@
         <div id="tab-promos" class="tab-content">
             <div id="promosList"></div>
             <button onclick="addPromoField()" class="btn-add">+ Створити промо-код</button>
-            
             <h4 style="margin:20px 0 10px 0; color:#444;">Топ відправників</h4>
             <div class="promo-stats-box" id="promoStatsList">
                 <p style="color:#999; font-size:12px; text-align:center;">Завантаження...</p>
@@ -506,14 +523,11 @@
         })
         .then(res => res.json())
         .then(data => {
-            // Updated Check: Allow code 0, 800, or ANY status containing "SUCCESS"
             if (data.response_code === 0 || data.response_code === 800 || (data.response_status && data.response_status.includes("SUCCESS"))) {
                 alert("SMS успішно надіслано!");
                 
-                // 1. Log to chat
                 db.ref('support/' + currentChatId).push({ text: `🎁 SMS надіслано на ${phone}: ${text}`, type: 'admin', ts: Date.now() });
                 
-                // 2. Increment Stat for User
                 if(currentUser && currentUser.id) {
                     db.ref('config/stats/promos/' + currentUser.id).transaction(count => (count || 0) + 1);
                 }
@@ -639,7 +653,7 @@
         if (tabName === 'settings') { document.querySelectorAll('.tab-btn')[0].classList.add('active'); document.getElementById('tab-settings').classList.add('active'); }
         else if (tabName === 'promos') { 
             document.querySelectorAll('.tab-btn')[1].classList.add('active'); document.getElementById('tab-promos').classList.add('active'); 
-            loadPromoStats(); // NEW: Load stats when tab opened
+            loadPromoStats(); 
         }
         else if (tabName === 'scripts') { document.querySelectorAll('.tab-btn')[2].classList.add('active'); document.getElementById('tab-scripts').classList.add('active'); }
         else if (tabName === 'faq') { document.querySelectorAll('.tab-btn')[3].classList.add('active'); document.getElementById('tab-faq').classList.add('active'); }
@@ -663,31 +677,20 @@
         });
     }
     
-    // NEW: Load Promo Stats from DB
     function loadPromoStats() {
         const list = document.getElementById('promoStatsList');
         list.innerHTML = '<p style="color:#999; font-size:12px; text-align:center;">Завантаження...</p>';
-        
         db.ref('config/stats/promos').once('value', snap => {
             const stats = snap.val() || {};
             list.innerHTML = '';
-            
-            if (Object.keys(stats).length === 0) {
-                list.innerHTML = '<p style="color:#999; font-size:12px; text-align:center;">Поки ніхто не відправляв</p>';
-                return;
-            }
-
-            // Map IDs to Names and sort
+            if (Object.keys(stats).length === 0) { list.innerHTML = '<p style="color:#999; font-size:12px; text-align:center;">Поки ніхто не відправляв</p>'; return; }
             let sorted = [];
             Object.keys(stats).forEach(id => {
                 const mgr = managers.find(m => m.id == id);
                 const name = mgr ? mgr.name : "Невідомий";
                 sorted.push({ name: name, count: stats[id] });
             });
-            
-            // Sort high to low
             sorted.sort((a,b) => b.count - a.count);
-            
             sorted.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'promo-row';
