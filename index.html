@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM v5.3 (Mobile Polish)</title>
+    <title>Latiao CRM v5.3 (Auto-Greet)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -175,13 +175,12 @@
             #smsPanel { flex-direction: column; align-items: stretch; padding: 15px; }
             .sms-input { width: 100%; }
             
-            /* --- MOBILE SETTINGS MODAL FIX --- */
-            .modal { align-items: flex-end; } /* Bottom Sheet style */
+            .modal { align-items: flex-end; } 
             .modal-content { 
                 width: 100%; max-width: 100%; 
                 height: 85vh; max-height: 85vh; 
                 border-radius: 24px 24px 0 0; 
-                margin: 0; /* Remove margin */
+                margin: 0; 
             }
             .modal-tabs { 
                 position: sticky; top: 0; z-index: 10; 
@@ -587,8 +586,25 @@
     function assignManager(managerId, chatId, reason = "manual") {
         if(!chatId) return;
         db.ref('active_chats/' + chatId).update({ assignedTo: managerId });
+        
+        const mgr = managers.find(m => m.id == managerId);
+        
+        // --- NOTIFY CLIENT ---
+        if (mgr) {
+            const systemMsg = `👋 Менеджер ${mgr.name} приєднався до чату і вже ознайомлюється з вашим питанням.`;
+            // Only send if not already sent recently? For now, simple push.
+            // Check if last message was NOT this greeting to avoid spam if clicked twice
+            db.ref('support/' + chatId).limitToLast(1).once('value', snap => {
+                let lastMsg = null;
+                snap.forEach(c => lastMsg = c.val());
+                if (!lastMsg || lastMsg.text !== systemMsg) {
+                     db.ref('support/' + chatId).push({ text: systemMsg, type: 'admin', ts: Date.now() });
+                }
+            });
+        }
+        // ---------------------
+
         if (tgBotToken) {
-            const mgr = managers.find(m => m.id == managerId);
             const managerName = mgr ? mgr.name : "Невідомий";
             if (managerId && mgr) {
                 let text = "";
