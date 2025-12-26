@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latiao Admin: Tabs & Status</title>
+    <title>Latiao Admin: Auto-Assign</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -118,7 +118,6 @@
             border-radius: 50%;
         }
         
-        /* Стиль для закритих чатів */
         .chat-item.closed {
             opacity: 0.7;
             background: #f8f9fa;
@@ -171,7 +170,6 @@
             cursor: pointer;
         }
         
-        /* Кнопка статусу */
         .status-btn {
             padding: 6px 12px;
             border-radius: 6px;
@@ -184,7 +182,6 @@
         }
         .btn-close-chat { background: #e0f7fa; color: #006064; }
         .btn-close-chat:hover { background: #b2ebf2; }
-        
         .btn-open-chat { background: #ffebee; color: #c62828; }
         .btn-open-chat:hover { background: #ffcdd2; }
 
@@ -209,7 +206,6 @@
         .msg.user { align-self: flex-start; background: #fff; border: 1px solid #ddd; border-bottom-left-radius: 2px; }
         .msg.admin { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
         
-        /* Час повідомлення */
         .msg-time {
             font-size: 10px;
             margin-top: 4px;
@@ -334,24 +330,37 @@
     // --- State ---
     let allChats = [];
     let currentChatId = null;
-    let currentChatStatus = 'open'; // open | closed
-    let filterType = 'open'; // default view
+    let currentChatStatus = 'open'; 
+    let filterType = 'open'; 
     let managers = [];
     let tgBotToken = "";
 
     // --- Init ---
     loadSettings();
-    setInterval(checkAutoReassignment, 30000);
+    setInterval(checkAutoReassignment, 30000); // Check every 30s for timeouts
 
     // --- Data Listeners ---
     db.ref('active_chats').on('value', snap => {
         allChats = [];
         snap.forEach(child => {
-            allChats.push({ id: child.key, ...child.val() });
+            const chatObj = { id: child.key, ...child.val() };
+            
+            // ==========================================
+            // МИТТЄВЕ ПРИЗНАЧЕННЯ (Instant Assign Logic)
+            // ==========================================
+            if (!chatObj.assignedTo && (chatObj.status !== 'closed') && managers.length > 0) {
+                // Якщо чат новий, відкритий і нічий -> призначаємо Першого менеджера
+                assignManager(managers[0].id, chatObj.id, "auto");
+                chatObj.assignedTo = managers[0].id; // Оновлюємо локально для рендеру
+            }
+
+            allChats.push(chatObj);
         });
+        
         allChats.sort((a, b) => b.ts - a.ts);
         renderChatList();
         
+        // Refresh Current Chat UI if open
         if(currentChatId) {
              const currentChatData = allChats.find(c => c.id === currentChatId);
              if(currentChatData) {
@@ -379,7 +388,7 @@
         });
 
         if (filtered.length === 0) {
-            container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Тут порожньо</div>';
+            container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Порожньо</div>';
             return;
         }
 
@@ -521,8 +530,8 @@
             if (mgr) {
                 let text = "";
                 if (reason === "manual") text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\n\nКлієнт ID: \`${chatId}\`\nМенеджер: ${mgr.name}`;
-                else if (reason === "timeout") text = `🚨 *ПЕРЕДАЧА ЧАТУ (Таймаут)*\n\nКлієнт: \`${chatId}\`\nТепер відповідаєте ви: ${mgr.name}`;
-                else if (reason === "auto") text = `⚡ *АВТО-РОЗПОДІЛ*\n\nНовий клієнт: \`${chatId}\`\nВи відповідальний.`;
+                else if (reason === "timeout") text = `🚨 *ПЕРЕДАЧА ЧАТУ (Таймаут)*\n\nКлієнт: \`${chatId}\`\nПопередній менеджер не відповів.\nТепер відповідаєте ви: ${mgr.name}`;
+                else if (reason === "auto") text = `⚡ *НОВИЙ ЧАТ*\n\nКлієнт: \`${chatId}\`\nПризначено вам автоматично.`;
 
                 fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
                     method: 'POST',
@@ -533,32 +542,35 @@
         }
     }
 
-    // --- AUTO PILOT LOGIC ---
+    // --- AUTO PILOT LOGIC (Updated for 5min timeout) ---
     function checkAutoReassignment() {
         if (managers.length === 0) return; 
 
         const NOW = Date.now();
-        const TIMEOUT = 5 * 60 * 1000; 
+        const TIMEOUT = 5 * 60 * 1000; // 5 хвилин
 
         allChats.forEach(chat => {
-            // Ignore closed or read chats
+            // Перевіряємо тільки відкриті і непрочитані чати
             if (chat.unread === true && chat.status !== 'closed') {
                 const timeDiff = NOW - chat.ts;
                 if (timeDiff > TIMEOUT) {
-                    let nextManagerId = null;
-                    if (!chat.assignedTo) {
-                        nextManagerId = managers[0].id;
-                        assignManager(nextManagerId, chat.id, "auto");
-                    } else {
+                    // Якщо менеджер вже є, але мовчить -> міняємо на наступного
+                    if (chat.assignedTo) {
                         const currentIndex = managers.findIndex(m => m.id == chat.assignedTo);
                         let nextIndex = currentIndex + 1;
-                        if (nextIndex >= managers.length) nextIndex = 0;
+                        if (nextIndex >= managers.length) nextIndex = 0; // По колу
+                        
+                        // Якщо є на кого міняти
                         if (managers.length > 1 || (managers.length === 1 && currentIndex === -1)) {
-                             nextManagerId = managers[nextIndex].id;
+                             const nextManagerId = managers[nextIndex].id;
+                             // Уникаємо спаму тим самим, якщо він один
                              if (nextManagerId !== chat.assignedTo) {
                                  assignManager(nextManagerId, chat.id, "timeout");
                              }
                         }
+                    } else {
+                        // Якщо раптом "вільний" провисів 5 хв (хоча ми призначаємо миттєво) - про всяк випадок
+                        assignManager(managers[0].id, chat.id, "auto");
                     }
                 }
             }
