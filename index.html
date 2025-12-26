@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao Admin Mobile + Stats</title>
+    <title>Latiao CRM</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -14,7 +14,6 @@
             --sidebar-bg: #fff;
             --border: #e1e4e8;
             --active-item: #fff5f5;
-            --text-gray: #666;
         }
 
         body {
@@ -25,6 +24,28 @@
             height: 100vh;
             height: 100dvh; 
             overflow: hidden;
+        }
+
+        /* --- LOGIN SCREEN --- */
+        #loginScreen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #f4f7f6; z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .login-box {
+            background: white; padding: 40px; border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 300px;
+            text-align: center;
+        }
+        .login-box h2 { margin-top: 0; color: #333; }
+        .login-input {
+            width: 100%; padding: 12px; margin-bottom: 10px;
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+        }
+        .login-btn {
+            width: 100%; padding: 12px; background: var(--primary);
+            color: white; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: bold; cursor: pointer;
         }
 
         /* --- Sidebar --- */
@@ -50,6 +71,11 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
+        }
+
+        .user-info-badge {
+            font-size: 12px; color: #666; background: #eee;
+            padding: 4px 8px; border-radius: 12px;
         }
 
         .search-box { position: relative; margin-bottom: 10px; }
@@ -162,8 +188,8 @@
         }
         .modal-content {
             background: white; padding: 0; border-radius: 16px;
-            width: 90%; max-width: 400px; overflow: hidden;
-            display: flex; flex-direction: column; max-height: 85vh;
+            width: 95%; max-width: 500px; overflow: hidden;
+            display: flex; flex-direction: column; max-height: 90vh;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
         
@@ -177,32 +203,29 @@
         .tab-content { padding: 20px; overflow-y: auto; display: none; }
         .tab-content.active { display: block; }
 
-        .manager-row { display: flex; gap: 5px; margin-bottom: 8px; }
-        .manager-row input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; width: 100%;}
+        .manager-row { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px; 
+            margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; 
+        }
+        .manager-row input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 100%; box-sizing: border-box; }
         .btn-save {
             background: var(--primary); color: white; width: 100%;
             padding: 12px; margin-top: 15px; border: none; border-radius: 10px;
-            font-size: 16px; font-weight: bold;
+            font-size: 16px; font-weight: bold; cursor: pointer;
         }
         
         /* Stats Styles */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box {
-            background: #f9f9f9; border-radius: 10px; padding: 10px; text-align: center;
-            border: 1px solid #eee;
-        }
+        .stat-box { background: #f9f9f9; border-radius: 10px; padding: 10px; text-align: center; border: 1px solid #eee; }
         .stat-num { display: block; font-size: 20px; font-weight: bold; color: #333; }
         .stat-label { font-size: 11px; color: #888; text-transform: uppercase; }
         
         .stat-list { display: flex; flex-direction: column; gap: 8px; }
-        .stat-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px; border-bottom: 1px solid #f0f0f0;
-        }
+        .stat-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; }
         .stat-name { font-weight: 600; font-size: 14px; }
         .stat-bar { display: flex; gap: 10px; font-size: 12px; }
-        .val-active { color: #e67e22; font-weight: bold; } /* Orange for active */
-        .val-done { color: #27ae60; font-weight: bold; }   /* Green for closed */
+        .val-active { color: #e67e22; font-weight: bold; }
+        .val-done { color: #27ae60; font-weight: bold; }
 
         /* --- MOBILE ADAPTATION --- */
         @media (max-width: 768px) {
@@ -222,6 +245,16 @@
 </head>
 <body>
 
+<div id="loginScreen">
+    <div class="login-box">
+        <h2>Вхід в систему</h2>
+        <input type="text" id="loginUser" class="login-input" placeholder="Логін">
+        <input type="password" id="loginPass" class="login-input" placeholder="Пароль">
+        <button class="login-btn" onclick="authenticate()">Увійти</button>
+        <p style="font-size:11px; color:#999; margin-top:15px;">*Сесія діє 24 години</p>
+    </div>
+</div>
+
 <div id="settingsModal" class="modal">
     <div class="modal-content">
         <div class="modal-tabs">
@@ -230,9 +263,10 @@
         </div>
 
         <div id="tab-settings" class="tab-content active">
-            <label style="font-size:12px; font-weight:bold;">Менеджери:</label>
+            <label style="font-size:12px; font-weight:bold;">Додавання менеджерів:</label>
+            <p style="font-size:10px; color:#666;">Ім'я | Telegram ID | Логін | Пароль</p>
             <div id="managersList"></div>
-            <button onclick="addManagerField()" style="background:#eee; border:none; padding:8px; border-radius:6px; width:100%; margin-top:5px;">+ Додати</button>
+            <button onclick="addManagerField()" style="background:#eee; border:none; padding:8px; border-radius:6px; width:100%; margin-top:5px;">+ Додати ряд</button>
 
             <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
             
@@ -242,8 +276,10 @@
             <label style="font-size:12px; font-weight:bold;">Admin ID (для логів):</label>
             <input type="text" id="adminIdInput" placeholder="ID..." style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px;">
 
-            <button class="btn-save" onclick="saveSettings()">Зберегти</button>
+            <button class="btn-save" onclick="saveSettings()">Зберегти зміни</button>
             <button onclick="closeSettings()" style="width:100%; margin-top:10px; background:white; border:1px solid #ddd; padding:12px; border-radius:10px;">Закрити</button>
+            
+            <button onclick="logout()" style="width:100%; margin-top:10px; background:#fff5f5; color:red; border:1px solid #ffdcdc; padding:12px; border-radius:10px;">Вийти з системи</button>
         </div>
 
         <div id="tab-stats" class="tab-content">
@@ -274,8 +310,13 @@
 <div class="sidebar">
     <div class="sidebar-header">
         <div class="top-row">
-            <h2 style="margin:0; font-size:20px;">Latiao Admin</h2>
-            <button class="settings-btn" onclick="openSettings()" style="background:none; border:none; font-size:22px;">⚙️</button>
+            <div style="display:flex; flex-direction:column;">
+                <h2 style="margin:0; font-size:20px;">Latiao Admin</h2>
+                <span id="currentUserDisplay" class="user-info-badge">Гість</span>
+            </div>
+            
+            <button id="btnSettings" class="settings-btn" onclick="openSettings()" style="background:none; border:none; font-size:22px; display:none;">⚙️</button>
+            <button onclick="logout()" style="background:none; border:none; font-size:18px; margin-left:10px;">🚪</button>
         </div>
         
         <div class="search-box">
@@ -324,10 +365,12 @@
 </div>
 
 <script>
+    // --- Config ---
     const firebaseConfig = { databaseURL: "https://latiao-chat-default-rtdb.firebaseio.com" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // --- State ---
     let allChats = [];
     let currentChatId = null;
     let currentChatStatus = 'open'; 
@@ -335,34 +378,121 @@
     let managers = [];
     let tgBotToken = "";
     let superAdminId = ""; 
+    
+    // Auth State
+    let currentUser = null; 
+    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
 
-    loadSettings();
-    setInterval(checkAutoReassignment, 30000); 
+    // --- Start ---
+    checkSession();
 
-    db.ref('active_chats').on('value', snap => {
-        allChats = [];
-        snap.forEach(child => {
-            const chatObj = { id: child.key, ...child.val() };
-            if (!chatObj.assignedTo && (chatObj.status !== 'closed') && managers.length > 0) {
-                assignManager(managers[0].id, chatObj.id, "auto");
-                chatObj.assignedTo = managers[0].id;
+    // --- AUTH LOGIC ---
+    function checkSession() {
+        const storedUser = localStorage.getItem('lc_user');
+        const loginTime = localStorage.getItem('lc_time');
+
+        if (storedUser && loginTime) {
+            const now = Date.now();
+            if (now - parseInt(loginTime) > SESSION_TIMEOUT) {
+                logout(); // Session expired
+            } else {
+                currentUser = JSON.parse(storedUser);
+                initApp();
             }
-            allChats.push(chatObj);
-        });
-        
-        allChats.sort((a, b) => b.ts - a.ts);
-        renderChatList();
-        
-        if(currentChatId) {
-             const currentChatData = allChats.find(c => c.id === currentChatId);
-             if(currentChatData) {
-                 document.getElementById('managerSelect').value = currentChatData.assignedTo || "";
-                 currentChatStatus = currentChatData.status || 'open';
-                 updateStatusButtonUI(currentChatStatus);
-             }
+        } else {
+            // Show Login Screen
+            document.getElementById('loginScreen').style.display = 'flex';
         }
-    });
+    }
 
+    function authenticate() {
+        const login = document.getElementById('loginUser').value.trim();
+        const pass = document.getElementById('loginPass').value.trim();
+
+        if(!login || !pass) return alert('Введіть логін та пароль');
+
+        // Fetch managers to verify
+        db.ref('config/managers').once('value', snap => {
+            const mgrs = snap.val() || [];
+            let found = null;
+            let role = 'manager';
+
+            // Check hardcoded root admin (Fall-back)
+            if (login === 'admin' && pass === 'admin') {
+                found = { name: 'Super Admin', id: 'root' };
+                role = 'admin';
+            } else {
+                // Check DB
+                found = mgrs.find(m => m.login === login && m.password === pass);
+                // In DB we can save a field 'role' if needed, or assume first user is admin?
+                // For now, let's assume 'admin' login is the only admin, OR add role logic.
+                // Let's rely on the hardcoded 'admin' for settings access, OR check property.
+                if (found && found.login === 'admin') role = 'admin'; // Or store role in DB
+            }
+
+            if (found) {
+                currentUser = { ...found, role: role };
+                localStorage.setItem('lc_user', JSON.stringify(currentUser));
+                localStorage.setItem('lc_time', Date.now());
+                initApp();
+            } else {
+                alert('Невірні дані');
+            }
+        });
+    }
+
+    function logout() {
+        localStorage.removeItem('lc_user');
+        localStorage.removeItem('lc_time');
+        location.reload();
+    }
+
+    function initApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+        
+        // Update UI based on Role
+        document.getElementById('currentUserDisplay').innerText = currentUser.name;
+        
+        if (currentUser.role === 'admin') {
+            document.getElementById('btnSettings').style.display = 'block';
+            document.getElementById('currentUserDisplay').style.background = '#ffebee';
+            document.getElementById('currentUserDisplay').style.color = 'red';
+            document.getElementById('currentUserDisplay').innerText += ' (Admin)';
+        } else {
+            document.getElementById('btnSettings').style.display = 'none';
+        }
+
+        loadSettings(); // Load config
+        // Listen to chats
+        db.ref('active_chats').on('value', snap => {
+            allChats = [];
+            snap.forEach(child => {
+                const chatObj = { id: child.key, ...child.val() };
+                // Instant Assign Logic
+                if (!chatObj.assignedTo && (chatObj.status !== 'closed') && managers.length > 0) {
+                    assignManager(managers[0].id, chatObj.id, "auto");
+                    chatObj.assignedTo = managers[0].id;
+                }
+                allChats.push(chatObj);
+            });
+            allChats.sort((a, b) => b.ts - a.ts);
+            renderChatList();
+            
+            // UI Update if chat open
+            if(currentChatId) {
+                 const d = allChats.find(c => c.id === currentChatId);
+                 if(d) {
+                     document.getElementById('managerSelect').value = d.assignedTo || "";
+                     currentChatStatus = d.status || 'open';
+                     updateStatusButtonUI(currentChatStatus);
+                 }
+            }
+        });
+
+        setInterval(checkAutoReassignment, 30000); 
+    }
+
+    // --- RENDER LOGIC ---
     function renderChatList() {
         const container = document.getElementById('chatList');
         const search = document.getElementById('searchInput').value.toLowerCase();
@@ -393,7 +523,6 @@
             } else if ((chat.status || 'open') !== 'closed') {
                  managerName = `<span class="assigned-tag" style="background:#fff3cd; color:#856404;">⚠️</span>`;
             }
-            
             const isClosed = chat.status === 'closed';
 
             div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''} ${chat.unread ? 'unread' : ''} ${isClosed ? 'closed' : ''}`;
@@ -452,33 +581,21 @@
         });
     }
 
-    function closeChatMobile() {
-        document.body.classList.remove('chat-open');
-    }
+    function closeChatMobile() { document.body.classList.remove('chat-open'); }
 
     function renderMessage(msg, container) {
         const div = document.createElement('div');
         div.className = `msg ${msg.type === 'admin' ? 'admin' : 'user'}`;
-        
         let timeStr = "";
-        if (msg.ts) {
-            timeStr = new Date(msg.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        }
-
-        div.innerHTML = `
-            <span>${msg.text}</span>
-            <span class="msg-time">${timeStr}</span>
-        `;
+        if (msg.ts) timeStr = new Date(msg.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        div.innerHTML = `<span>${msg.text}</span><span class="msg-time">${timeStr}</span>`;
         container.appendChild(div);
     }
 
     function updateStatusButtonUI(status) {
         const btn = document.getElementById('statusBtn');
-        if (status === 'closed') {
-            btn.className = 'status-btn btn-open-chat';
-        } else {
-            btn.className = 'status-btn btn-close-chat';
-        }
+        if (status === 'closed') btn.className = 'status-btn btn-open-chat';
+        else btn.className = 'status-btn btn-close-chat';
     }
 
     function toggleChatStatus() {
@@ -501,9 +618,7 @@
         select.value = assignedId || "";
     }
 
-    function manualAssign(val) {
-        assignManager(val, currentChatId, "manual");
-    }
+    function manualAssign(val) { assignManager(val, currentChatId, "manual"); }
 
     function assignManager(managerId, chatId, reason = "manual") {
         if(!chatId) return;
@@ -530,8 +645,7 @@
     
     function sendTelegram(chatId, text) {
         fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            method: 'POST', headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' })
         }).catch(console.error);
     }
@@ -571,20 +685,10 @@
 
         const ts = Date.now();
         db.ref('support/' + currentChatId).push({ text, type: 'admin', ts });
-        
-        db.ref('active_chats/' + currentChatId).update({ 
-            lastMsg: 'Ви: ' + text, 
-            ts, 
-            unread: false,
-            status: 'open' 
-        });
-        
+        db.ref('active_chats/' + currentChatId).update({ lastMsg: 'Ви: ' + text, ts, unread: false, status: 'open' });
         input.value = '';
     }
-
-    function handleEnter(e) {
-        if (e.key === 'Enter') sendMessage();
-    }
+    function handleEnter(e) { if (e.key === 'Enter') sendMessage(); }
 
     function archiveChat() {
         if (!currentChatId) return;
@@ -596,16 +700,16 @@
 
     // --- Settings & Stats ---
     function openSettings() {
+        if(currentUser.role !== 'admin') return; // Security check
         document.getElementById('settingsModal').style.display = 'flex';
         renderManagersInputs();
-        switchTab('settings'); // default
+        switchTab('settings');
     }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
     function switchTab(tabName) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
         if (tabName === 'settings') {
             document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
             document.getElementById('tab-settings').classList.add('active');
@@ -619,45 +723,25 @@
     function calculateStats() {
         let total = 0, active = 0, closed = 0;
         let mgrStats = {};
-        
-        // Init managers
-        managers.forEach(m => {
-            mgrStats[m.id] = { name: m.name, active: 0, closed: 0 };
-        });
-
-        // Loop chats
+        managers.forEach(m => { mgrStats[m.id] = { name: m.name, active: 0, closed: 0 }; });
         allChats.forEach(chat => {
             total++;
             const isClosed = chat.status === 'closed';
-            
             if (isClosed) closed++; else active++;
-
             if (chat.assignedTo && mgrStats[chat.assignedTo]) {
-                if (isClosed) mgrStats[chat.assignedTo].closed++;
-                else mgrStats[chat.assignedTo].active++;
+                if (isClosed) mgrStats[chat.assignedTo].closed++; else mgrStats[chat.assignedTo].active++;
             }
         });
-
-        // Render Global
         document.getElementById('statTotal').innerText = total;
         document.getElementById('statActive').innerText = active;
         document.getElementById('statClosed').innerText = closed;
-
-        // Render Managers
         const list = document.getElementById('managerStatsList');
         list.innerHTML = '';
-        
         Object.keys(mgrStats).forEach(id => {
             const m = mgrStats[id];
             const div = document.createElement('div');
             div.className = 'stat-item';
-            div.innerHTML = `
-                <span class="stat-name">${m.name}</span>
-                <div class="stat-bar">
-                    <span class="val-active" title="В роботі">⚡ ${m.active}</span>
-                    <span class="val-done" title="Закрито">✓ ${m.closed}</span>
-                </div>
-            `;
+            div.innerHTML = `<span class="stat-name">${m.name}</span><div class="stat-bar"><span class="val-active">⚡ ${m.active}</span><span class="val-done">✓ ${m.closed}</span></div>`;
             list.appendChild(div);
         });
     }
@@ -667,17 +751,21 @@
         list.innerHTML = '';
         document.getElementById('tgTokenInput').value = tgBotToken;
         document.getElementById('adminIdInput').value = superAdminId;
-        managers.forEach((mgr) => addManagerField(mgr.name, mgr.id));
+        managers.forEach((mgr) => addManagerField(mgr.name, mgr.id, mgr.login, mgr.password));
         if (managers.length === 0) addManagerField();
     }
 
-    function addManagerField(name = '', id = '') {
+    function addManagerField(name = '', id = '', login = '', pass = '') {
         const div = document.createElement('div');
         div.className = 'manager-row';
         div.innerHTML = `
-            <input type="text" placeholder="Ім'я" class="mgr-name" value="${name}" style="width:30%">
-            <input type="text" placeholder="Telegram ID" class="mgr-id" value="${id}" style="flex:1">
-            <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; font-size:18px;">✕</button>
+            <input type="text" placeholder="Ім'я" class="mgr-name" value="${name}">
+            <input type="text" placeholder="TG ID" class="mgr-id" value="${id}">
+            <input type="text" placeholder="Логін" class="mgr-login" value="${login}">
+            <input type="text" placeholder="Пароль" class="mgr-pass" value="${pass}">
+            <div style="grid-column: span 2; text-align:right;">
+                <button onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none;">Видалити</button>
+            </div>
         `;
         document.getElementById('managersList').appendChild(div);
     }
@@ -688,7 +776,9 @@
         rows.forEach(row => {
             const name = row.querySelector('.mgr-name').value.trim();
             const id = row.querySelector('.mgr-id').value.trim();
-            if (name && id) newManagers.push({ name, id });
+            const login = row.querySelector('.mgr-login').value.trim();
+            const pass = row.querySelector('.mgr-pass').value.trim();
+            if (name && id && login && pass) newManagers.push({ name, id, login, password: pass });
         });
         const token = document.getElementById('tgTokenInput').value.trim();
         const adminId = document.getElementById('adminIdInput').value.trim();
@@ -714,7 +804,6 @@
             superAdminId = cfg.admin_id || "";
         });
     }
-
 </script>
 
 </body>
