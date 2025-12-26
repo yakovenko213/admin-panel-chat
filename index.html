@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM v8.0</title>
+    <title>Latiao CRM v8.1 (Fix Stats)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -102,7 +102,6 @@
         .badge-new { background: var(--red); color: white; animation: pulse 2s infinite; }
         .badge-stale { background: var(--orange); color: white; }
         
-        /* MANAGER ASSIGNMENT TAGS */
         .assign-tag { 
             font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;
         }
@@ -131,20 +130,20 @@
         /* --- SMS PANEL --- */
         #smsPanel {
             background: #fff8e1; border-bottom: 1px solid #ffe0b2; padding: 10px 20px; display: none;
-            gap: 10px; align-items: center; animation: slideDown 0.3s ease; flex-shrink: 0;
+            gap: 10px; align-items: center; animation: slideDown 0.3s ease; flex-shrink: 0; position: relative;
         }
         @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .sms-input { padding: 8px; border: 1px solid #ffe0b2; border-radius: 8px; font-size: 14px; width: 140px; background: #fff; }
         .sms-select { padding: 8px; border: 1px solid #ffe0b2; border-radius: 8px; font-size: 14px; flex: 1; background: #fff; }
-        .btn-send-sms { background: var(--orange); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+        .btn-send-sms { background: var(--orange); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; display:flex; align-items:center; gap:5px;}
+        .sms-close { position: absolute; top:5px; right:5px; background:none; border:none; color:#d68910; font-weight:bold; cursor:pointer;}
 
         .messages-area { flex: 1; padding: 20px; overflow-y: auto; background: #f4f7f6; display: flex; flex-direction: column; gap: 10px; }
         .msg { max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px; position: relative; display: flex; flex-direction: column; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .msg.user { align-self: flex-start; background: #fff; border-bottom-left-radius: 4px; color: var(--text-dark); }
         .msg.admin { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
         
-        /* Log Message Style (SMS etc) */
-        .msg.log { align-self: center; background: #fff8e1; border: 1px solid #ffe0b2; border-radius: 12px; color: #856404; font-size: 13px; max-width: 90%; text-align: center; }
+        .msg.log { align-self: center; background: #fff8e1; border: 1px solid #ffe0b2; border-radius: 12px; color: #856404; font-size: 13px; max-width: 90%; text-align: center; box-shadow:none; }
         
         .msg-time { font-size: 10px; margin-top: 5px; align-self: flex-end; opacity: 0.7; }
         .msg-img { max-width: 100%; border-radius: 10px; cursor: pointer; margin-bottom: 5px; }
@@ -305,9 +304,12 @@
     </div>
 
     <div id="smsPanel">
+        <button class="sms-close" onclick="toggleSmsPanel()">✕</button>
         <input type="text" id="smsPhoneInput" class="sms-input" placeholder="380XXXXXXXXX">
         <select id="smsPromoSelect" class="sms-select"><option value="">Оберіть промо-код...</option></select>
-        <button class="btn-send-sms" onclick="sendTurboSMS()">Надіслати</button>
+        <button class="btn-send-sms" id="btnSendSms" onclick="sendTurboSMS()">
+            <span id="smsBtnText">Надіслати</span>
+        </button>
     </div>
 
     <div class="messages-area" id="messagesArea">
@@ -373,6 +375,16 @@
         document.getElementById('loginScreen').style.display = 'none';
         startTyper(currentUser.name);
         
+        // Auto-refresh manager info from DB on load to fix "Unknown" issues
+        db.ref('config/managers').once('value', snap => {
+            const mgrs = snap.val() || [];
+            const freshMe = mgrs.find(m => m.login === currentUser.login);
+            if (freshMe) {
+                currentUser = { ...freshMe, role: freshMe.role || currentUser.role };
+                localStorage.setItem('lc_user', JSON.stringify(currentUser));
+            }
+        });
+
         if (currentUser.role === 'admin') {
             document.getElementById('btnSettings').style.display = 'flex';
         }
@@ -382,11 +394,11 @@
             allChats = [];
             snap.forEach(child => {
                 const chatObj = { id: child.key, ...child.val() };
-                
-                // SMART ASSIGN
                 if (!chatObj.assignedTo && chatObj.status !== 'closed' && managers.length > 0) {
                     const isFaq = savedFaq.some(f => f.q === chatObj.lastMsg);
-                    const isInvite = chatObj.lastMsg === "🗣 Запросити менеджера" || chatObj.lastMsg.toLowerCase().includes("менеджер");
+                    const isInvite = chatObj.lastMsg === "🗣 Запросити менеджера" || 
+                                     chatObj.lastMsg.toLowerCase().includes("менеджер");
+
                     if (isInvite || (!isFaq && !chatObj.lastMsg.startsWith("Bot:"))) {
                         assignManager(managers[0].id, chatObj.id, "auto");
                         chatObj.assignedTo = managers[0].id;
@@ -408,7 +420,6 @@
         setInterval(checkAutoReassignment, 30000); 
     }
 
-    // --- NEW: DYNAMIC GREETING ---
     function startTyper(name) {
         const hour = new Date().getHours();
         let greeting = "Привіт";
@@ -440,7 +451,6 @@
             const matchSearch = chat.id.toLowerCase().includes(search) || last.toLowerCase().includes(search);
             const status = chat.status || 'open';
             
-            // Count unread active chats for badge
             if (status === 'open' && chat.unread) openUnreadCount++;
 
             if (filterType === 'open') return matchSearch && status !== 'closed';
@@ -448,7 +458,6 @@
             return matchSearch; 
         });
         
-        // Update Badge
         const badge = document.getElementById('openCount');
         if (openUnreadCount > 0) {
             badge.innerText = openUnreadCount;
@@ -468,7 +477,7 @@
             const isStale = !isClosed && isUserLast && timeDiff > 5 * 60 * 1000;
             
             let badgesHtml = '';
-            // --- NEW: ASSIGNED TAG ---
+            // Assigned Status Tag
             if (chat.assignedTo) {
                 const mgr = managers.find(m => m.id == chat.assignedTo);
                 const mgrName = mgr ? mgr.name : "Unknown";
@@ -476,7 +485,6 @@
             } else if (!isClosed) {
                 badgesHtml += `<span class="assign-tag none">⚠️ Не призначено</span>`;
             }
-            // -------------------------
 
             if (chat.unread) badgesHtml += `<span class="badge badge-new">NEW</span>`;
             if (isStale) badgesHtml += `<span class="badge badge-stale">⏳ Чекає</span>`;
@@ -525,20 +533,53 @@
         const sel = document.getElementById('smsPromoSelect'); sel.innerHTML = '<option value="">Оберіть промо-код...</option>';
         savedPromos.forEach(pr => { const opt = document.createElement('option'); opt.value = pr.text; opt.innerText = pr.title; sel.appendChild(opt); });
     }
+    
     function sendTurboSMS() {
         if (!turboToken) return alert("Налаштуйте TurboSMS!");
         const phone = document.getElementById('smsPhoneInput').value.trim();
         const text = document.getElementById('smsPromoSelect').value;
         const sender = turboSender || "Msg";
+        
         if (!phone || !text) return alert("Введіть дані");
-        fetch("https://api.turbosms.ua/message/send.json", { method: "POST", headers: { "Authorization": `Bearer ${turboToken}`, "Content-Type": "application/json" }, body: JSON.stringify({ recipients: [phone], sms: { sender: sender, text: text } }) })
-        .then(res => res.json()).then(data => {
+        
+        const btn = document.getElementById('btnSendSms');
+        const btnText = document.getElementById('smsBtnText');
+        const originalText = btnText.innerText;
+        btnText.innerText = "Відправка...";
+        btn.disabled = true;
+
+        fetch("https://api.turbosms.ua/message/send.json", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${turboToken}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                recipients: [phone],
+                sms: { sender: sender, text: text }
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false; btnText.innerText = originalText;
             if (data.response_code === 0 || data.response_code === 800 || (data.response_status && data.response_status.includes("SUCCESS"))) {
                 alert("SMS Надіслано!");
-                db.ref('support/' + currentChatId).push({ text: `🎁 SMS надіслано: ${text}`, type: 'admin', msgType: 'log', ts: Date.now() });
-                if(currentUser && currentUser.id) db.ref('config/stats/promos/' + currentUser.id).transaction(count => (count || 0) + 1);
+                db.ref('support/' + currentChatId).push({ text: `🎁 SMS надіслано на ${phone}: ${text}`, type: 'admin', msgType: 'log', ts: Date.now() });
+                
+                // Track stats by LOGIN (most reliable)
+                const statKey = currentUser.login || "unknown";
+                db.ref('config/stats/promos/' + statKey).transaction(count => (count || 0) + 1);
+                
                 toggleSmsPanel();
-            } else { alert("Помилка: " + (data.response_status || "Error")); }
+            } else {
+                alert("Помилка відправки: " + (data.response_status || "Невідомо"));
+                console.error(data);
+            }
+        })
+        .catch(err => {
+            btn.disabled = false; btnText.innerText = originalText;
+            alert("Помилка мережі");
+            console.error(err);
         });
     }
 
@@ -706,16 +747,24 @@
         });
     }
     
+    // NEW: Load stats by LOGIN instead of ID
     function loadPromoStats() {
         const list = document.getElementById('promoStatsList'); list.innerHTML = '<p style="color:#999; font-size:12px; text-align:center;">Завантаження...</p>';
         db.ref('config/stats/promos').once('value', snap => {
             const stats = snap.val() || {}; list.innerHTML = '';
             if (Object.keys(stats).length === 0) { list.innerHTML = '<p style="color:#999; font-size:12px; text-align:center;">Поки ніхто не відправляв</p>'; return; }
             let sorted = [];
-            Object.keys(stats).forEach(id => {
-                const mgr = managers.find(m => m.id == id); const name = mgr ? mgr.name : "Невідомий";
-                sorted.push({ name: name, count: stats[id] });
+            
+            // Try to match by LOGIN
+            Object.keys(stats).forEach(key => {
+                // Key might be login OR id (from old version)
+                let mgr = managers.find(m => m.login === key);
+                if (!mgr) mgr = managers.find(m => m.id === key); // Fallback to ID
+                
+                const name = mgr ? mgr.name : "Невідомий (" + key + ")";
+                sorted.push({ name: name, count: stats[key] });
             });
+            
             sorted.sort((a,b) => b.count - a.count);
             sorted.forEach(item => {
                 const div = document.createElement('div'); div.className = 'promo-row';
