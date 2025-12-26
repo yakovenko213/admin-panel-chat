@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latiao Admin Pro v2</title>
+    <title>Latiao Admin: Auto-Pilot</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -256,7 +256,7 @@
             <div>
                 <strong id="chatUserTitle">...</strong>
             </div>
-            <select id="managerSelect" class="manager-select" onchange="assignManager(this.value)">
+            <select id="managerSelect" class="manager-select" onchange="manualAssign(this.value)">
                 <option value="">Не призначено</option>
             </select>
         </div>
@@ -284,24 +284,25 @@
     // --- State ---
     let allChats = [];
     let currentChatId = null;
-    let filterType = 'all'; // 'all' or 'unread'
+    let filterType = 'all'; 
     let managers = [];
     let tgBotToken = "";
 
     // --- Init ---
     loadSettings();
     
+    // START AUTOMATION LOOP (Check every 30 seconds)
+    setInterval(checkAutoReassignment, 30000);
+
     // --- Data Listeners ---
     db.ref('active_chats').on('value', snap => {
         allChats = [];
         snap.forEach(child => {
             allChats.push({ id: child.key, ...child.val() });
         });
-        // Sort: newest first
         allChats.sort((a, b) => b.ts - a.ts);
         renderChatList();
         
-        // If chat is open, update dropdown just in case
         if(currentChatId) {
              const currentChatData = allChats.find(c => c.id === currentChatId);
              if(currentChatData) {
@@ -332,11 +333,12 @@
             const div = document.createElement('div');
             const time = new Date(chat.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
-            // Find manager name if assigned
             let managerName = "";
             if (chat.assignedTo) {
                 const mgr = managers.find(m => m.id == chat.assignedTo);
                 if (mgr) managerName = `<span class="assigned-tag">👤 ${mgr.name}</span>`;
+            } else {
+                 managerName = `<span class="assigned-tag" style="background:#fff3cd; color:#856404;">⚠️ Вільний</span>`;
             }
 
             div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''} ${chat.unread ? 'unread' : ''}`;
@@ -370,18 +372,14 @@
         
         const chatData = allChats.find(c => c.id === chatId);
 
-        // UI Setup
         document.getElementById('chatHeader').style.display = 'flex';
         document.getElementById('inputArea').style.display = 'flex';
         document.getElementById('chatUserTitle').innerText = 'Клієнт: ' + chatId;
         
-        // Update Select Dropdown options & value
         updateManagerDropdown(chatData ? chatData.assignedTo : "");
 
-        // Mark as read
         db.ref('active_chats/' + chatId).update({ unread: false });
 
-        // Load Messages
         const area = document.getElementById('messagesArea');
         area.innerHTML = '<div style="text-align:center; padding:20px;">Завантаження...</div>';
 
@@ -415,18 +413,28 @@
         select.value = assignedId || "";
     }
 
-    function assignManager(managerId) {
-        if(!currentChatId) return;
+    function manualAssign(val) {
+        assignManager(val, currentChatId, "manual");
+    }
 
-        // 1. Update DB
-        db.ref('active_chats/' + currentChatId).update({ assignedTo: managerId });
+    // Main Assignment Logic (Handles both Manual and Auto)
+    function assignManager(managerId, chatId, reason = "manual") {
+        if(!chatId) return;
 
-        // 2. Notify via Telegram
+        db.ref('active_chats/' + chatId).update({ assignedTo: managerId });
+
         if (managerId && tgBotToken) {
             const mgr = managers.find(m => m.id == managerId);
             if (mgr) {
-                const text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\n\nМенеджер: ${mgr.name}\nКлієнт ID: \`${currentChatId}\`\n\nЗайдіть в адмінку, щоб відповісти.`;
-                
+                let text = "";
+                if (reason === "manual") {
+                    text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\n\nКлієнт ID: \`${chatId}\`\nМенеджер: ${mgr.name}`;
+                } else if (reason === "timeout") {
+                    text = `🚨 *ПЕРЕДАЧА ЧАТУ (Таймаут 5 хв)*\n\nПопередній менеджер не відповів.\nКлієнт: \`${chatId}\`\nТепер відповідаєте ви: ${mgr.name}`;
+                } else if (reason === "auto") {
+                    text = `⚡ *АВТО-РОЗПОДІЛ*\n\nНовий клієнт: \`${chatId}\`\nВи призначені відповідальним.`;
+                }
+
                 fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -435,11 +443,52 @@
                         text: text,
                         parse_mode: 'Markdown'
                     })
-                }).then(res => {
-                    console.log("Notification sent");
-                }).catch(err => console.error("TG Error", err));
+                }).catch(console.error);
             }
         }
+    }
+
+    // --- AUTO PILOT LOGIC ---
+    function checkAutoReassignment() {
+        if (managers.length === 0) return; // No managers to assign to
+
+        const NOW = Date.now();
+        const TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+        allChats.forEach(chat => {
+            // Check only unread chats
+            if (chat.unread === true) {
+                const timeDiff = NOW - chat.ts;
+
+                // If chat is stale (older than 5 min)
+                if (timeDiff > TIMEOUT) {
+                    
+                    // Logic: Find current manager index and pick next one
+                    let nextManagerId = null;
+                    
+                    if (!chat.assignedTo) {
+                        // Case 1: No one assigned yet -> Assign to first manager
+                        nextManagerId = managers[0].id;
+                        assignManager(nextManagerId, chat.id, "auto");
+                    } else {
+                        // Case 2: Someone assigned but sleeping -> Reassign to next
+                        const currentIndex = managers.findIndex(m => m.id == chat.assignedTo);
+                        let nextIndex = currentIndex + 1;
+                        if (nextIndex >= managers.length) nextIndex = 0; // Loop back to start
+                        
+                        // Avoid re-assigning if only 1 manager exists, but still notify maybe?
+                        if (managers.length > 1 || (managers.length === 1 && currentIndex === -1)) {
+                             nextManagerId = managers[nextIndex].id;
+                             
+                             // Only reassign if it's actually a different person (or force notify)
+                             if (nextManagerId !== chat.assignedTo) {
+                                 assignManager(nextManagerId, chat.id, "timeout");
+                             }
+                        }
+                    }
+                }
+            }
+        });
     }
 
     function sendMessage() {
@@ -511,11 +560,9 @@
         db.ref('config/managers').set(newManagers);
         db.ref('config/tg_token').set(token);
         
-        // Update local state instantly
         managers = newManagers;
         tgBotToken = token;
         
-        // Re-render chat UI if open (to update select options)
         if(currentChatId) openChat(currentChatId);
 
         closeSettings();
