@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latiao Admin: Auto-Pilot</title>
+    <title>Latiao Admin: Time & Status</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -111,6 +111,16 @@
             background: var(--primary);
             border-radius: 50%;
         }
+        
+        /* Стиль для закритих чатів */
+        .chat-item.closed {
+            opacity: 0.6;
+            background: #f4f4f4;
+        }
+        .chat-item.closed strong {
+            text-decoration: line-through;
+            color: #888;
+        }
 
         .assigned-tag {
             font-size: 10px;
@@ -155,6 +165,19 @@
             margin-left: 10px;
             cursor: pointer;
         }
+        
+        /* Кнопка статусу */
+        .status-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            border: none;
+            margin-right: 10px;
+            font-weight: 500;
+        }
+        .btn-close-chat { background: #e0f7fa; color: #006064; }
+        .btn-open-chat { background: #ffebee; color: #c62828; }
 
         .messages-area {
             flex: 1;
@@ -171,10 +194,22 @@
             border-radius: 14px;
             font-size: 14px;
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
         .msg.user { align-self: flex-start; background: #fff; border: 1px solid #ddd; border-bottom-left-radius: 2px; }
         .msg.admin { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
         
+        /* Час повідомлення */
+        .msg-time {
+            font-size: 10px;
+            margin-top: 4px;
+            align-self: flex-end;
+            opacity: 0.7;
+        }
+        .msg.admin .msg-time { color: rgba(255,255,255, 0.9); }
+        .msg.user .msg-time { color: #999; }
+
         .input-area {
             padding: 15px;
             border-top: 1px solid var(--border);
@@ -256,11 +291,16 @@
             <div>
                 <strong id="chatUserTitle">...</strong>
             </div>
+            
             <select id="managerSelect" class="manager-select" onchange="manualAssign(this.value)">
                 <option value="">Не призначено</option>
             </select>
         </div>
-        <button onclick="archiveChat()" class="btn-sm" style="background:#fff; border:1px solid #ddd; color:red;">Видалити</button>
+
+        <div>
+            <button id="statusBtn" class="status-btn btn-close-chat" onclick="toggleChatStatus()">✅ Завершити</button>
+            <button onclick="archiveChat()" class="btn-sm" style="background:#fff; border:1px solid #ddd; color:red;">Видалити</button>
+        </div>
     </div>
 
     <div class="messages-area" id="messagesArea">
@@ -284,14 +324,13 @@
     // --- State ---
     let allChats = [];
     let currentChatId = null;
+    let currentChatStatus = 'open'; // open | closed
     let filterType = 'all'; 
     let managers = [];
     let tgBotToken = "";
 
     // --- Init ---
     loadSettings();
-    
-    // START AUTOMATION LOOP (Check every 30 seconds)
     setInterval(checkAutoReassignment, 30000);
 
     // --- Data Listeners ---
@@ -307,6 +346,9 @@
              const currentChatData = allChats.find(c => c.id === currentChatId);
              if(currentChatData) {
                  document.getElementById('managerSelect').value = currentChatData.assignedTo || "";
+                 // Update Status Button UI
+                 updateStatusButtonUI(currentChatData.status || 'open');
+                 currentChatStatus = currentChatData.status || 'open';
              }
         }
     });
@@ -340,8 +382,11 @@
             } else {
                  managerName = `<span class="assigned-tag" style="background:#fff3cd; color:#856404;">⚠️ Вільний</span>`;
             }
+            
+            // Check status for styling
+            const isClosed = chat.status === 'closed';
 
-            div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''} ${chat.unread ? 'unread' : ''}`;
+            div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''} ${chat.unread ? 'unread' : ''} ${isClosed ? 'closed' : ''}`;
             div.onclick = () => openChat(chat.id);
             div.innerHTML = `
                 <div style="display:flex; justify-content:space-between;">
@@ -371,13 +416,17 @@
         renderChatList(); 
         
         const chatData = allChats.find(c => c.id === chatId);
+        const status = chatData ? (chatData.status || 'open') : 'open';
+        currentChatStatus = status;
 
         document.getElementById('chatHeader').style.display = 'flex';
         document.getElementById('inputArea').style.display = 'flex';
         document.getElementById('chatUserTitle').innerText = 'Клієнт: ' + chatId;
         
         updateManagerDropdown(chatData ? chatData.assignedTo : "");
+        updateStatusButtonUI(status);
 
+        // Mark as read (only if open, but generally safe)
         db.ref('active_chats/' + chatId).update({ unread: false });
 
         const area = document.getElementById('messagesArea');
@@ -390,26 +439,60 @@
             area.innerHTML = '';
             snap.forEach(child => {
                 const msg = child.val();
-                const div = document.createElement('div');
-                div.className = `msg ${msg.type === 'admin' ? 'admin' : 'user'}`;
-                div.innerText = msg.text;
-                area.appendChild(div);
+                renderMessage(msg, area);
             });
             area.scrollTop = area.scrollHeight;
         });
     }
 
+    // Function to render single message with time
+    function renderMessage(msg, container) {
+        const div = document.createElement('div');
+        div.className = `msg ${msg.type === 'admin' ? 'admin' : 'user'}`;
+        
+        // Format Time
+        let timeStr = "";
+        if (msg.ts) {
+            timeStr = new Date(msg.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        }
+
+        div.innerHTML = `
+            <span>${msg.text}</span>
+            <span class="msg-time">${timeStr}</span>
+        `;
+        container.appendChild(div);
+    }
+
+    // --- Status Logic ---
+    function updateStatusButtonUI(status) {
+        const btn = document.getElementById('statusBtn');
+        if (status === 'closed') {
+            btn.innerText = '🔄 Відкрити чат';
+            btn.className = 'status-btn btn-open-chat';
+        } else {
+            btn.innerText = '✅ Завершити';
+            btn.className = 'status-btn btn-close-chat';
+        }
+    }
+
+    function toggleChatStatus() {
+        if(!currentChatId) return;
+        const newStatus = currentChatStatus === 'open' ? 'closed' : 'open';
+        db.ref('active_chats/' + currentChatId).update({ status: newStatus });
+        
+        // Optional: If closing, maybe remove assigned manager? No, better keep history.
+    }
+
+    // --- Manager Logic ---
     function updateManagerDropdown(assignedId) {
         const select = document.getElementById('managerSelect');
         select.innerHTML = '<option value="">Не призначено</option>';
-        
         managers.forEach(mgr => {
             const opt = document.createElement('option');
             opt.value = mgr.id;
             opt.innerText = mgr.name;
             select.appendChild(opt);
         });
-        
         select.value = assignedId || "";
     }
 
@@ -417,70 +500,48 @@
         assignManager(val, currentChatId, "manual");
     }
 
-    // Main Assignment Logic (Handles both Manual and Auto)
     function assignManager(managerId, chatId, reason = "manual") {
         if(!chatId) return;
-
         db.ref('active_chats/' + chatId).update({ assignedTo: managerId });
-
         if (managerId && tgBotToken) {
             const mgr = managers.find(m => m.id == managerId);
             if (mgr) {
                 let text = "";
-                if (reason === "manual") {
-                    text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\n\nКлієнт ID: \`${chatId}\`\nМенеджер: ${mgr.name}`;
-                } else if (reason === "timeout") {
-                    text = `🚨 *ПЕРЕДАЧА ЧАТУ (Таймаут 5 хв)*\n\nПопередній менеджер не відповів.\nКлієнт: \`${chatId}\`\nТепер відповідаєте ви: ${mgr.name}`;
-                } else if (reason === "auto") {
-                    text = `⚡ *АВТО-РОЗПОДІЛ*\n\nНовий клієнт: \`${chatId}\`\nВи призначені відповідальним.`;
-                }
+                if (reason === "manual") text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\n\nКлієнт ID: \`${chatId}\`\nМенеджер: ${mgr.name}`;
+                else if (reason === "timeout") text = `🚨 *ПЕРЕДАЧА ЧАТУ (Таймаут)*\n\nКлієнт: \`${chatId}\`\nТепер відповідаєте ви: ${mgr.name}`;
+                else if (reason === "auto") text = `⚡ *АВТО-РОЗПОДІЛ*\n\nНовий клієнт: \`${chatId}\`\nВи відповідальний.`;
 
                 fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        chat_id: managerId,
-                        text: text,
-                        parse_mode: 'Markdown'
-                    })
+                    body: JSON.stringify({ chat_id: managerId, text: text, parse_mode: 'Markdown' })
                 }).catch(console.error);
             }
         }
     }
 
-    // --- AUTO PILOT LOGIC ---
+    // --- AUTO PILOT LOGIC (Updated) ---
     function checkAutoReassignment() {
-        if (managers.length === 0) return; // No managers to assign to
+        if (managers.length === 0) return; 
 
         const NOW = Date.now();
-        const TIMEOUT = 5 * 60 * 1000; // 5 minutes
+        const TIMEOUT = 5 * 60 * 1000; 
 
         allChats.forEach(chat => {
-            // Check only unread chats
-            if (chat.unread === true) {
+            // IGNORE CLOSED CHATS & READ CHATS
+            if (chat.unread === true && chat.status !== 'closed') {
                 const timeDiff = NOW - chat.ts;
-
-                // If chat is stale (older than 5 min)
                 if (timeDiff > TIMEOUT) {
-                    
-                    // Logic: Find current manager index and pick next one
                     let nextManagerId = null;
-                    
                     if (!chat.assignedTo) {
-                        // Case 1: No one assigned yet -> Assign to first manager
                         nextManagerId = managers[0].id;
                         assignManager(nextManagerId, chat.id, "auto");
                     } else {
-                        // Case 2: Someone assigned but sleeping -> Reassign to next
                         const currentIndex = managers.findIndex(m => m.id == chat.assignedTo);
                         let nextIndex = currentIndex + 1;
-                        if (nextIndex >= managers.length) nextIndex = 0; // Loop back to start
-                        
-                        // Avoid re-assigning if only 1 manager exists, but still notify maybe?
+                        if (nextIndex >= managers.length) nextIndex = 0;
                         if (managers.length > 1 || (managers.length === 1 && currentIndex === -1)) {
                              nextManagerId = managers[nextIndex].id;
-                             
-                             // Only reassign if it's actually a different person (or force notify)
                              if (nextManagerId !== chat.assignedTo) {
                                  assignManager(nextManagerId, chat.id, "timeout");
                              }
@@ -498,7 +559,15 @@
 
         const ts = Date.now();
         db.ref('support/' + currentChatId).push({ text, type: 'admin', ts });
-        db.ref('active_chats/' + currentChatId).update({ lastMsg: 'Ви: ' + text, ts, unread: false });
+        
+        // If sending message, auto re-open chat if it was closed
+        db.ref('active_chats/' + currentChatId).update({ 
+            lastMsg: 'Ви: ' + text, 
+            ts, 
+            unread: false,
+            status: 'open' 
+        });
+        
         input.value = '';
     }
 
@@ -528,10 +597,7 @@
         const list = document.getElementById('managersList');
         list.innerHTML = '';
         document.getElementById('tgTokenInput').value = tgBotToken;
-
-        managers.forEach((mgr) => {
-            addManagerField(mgr.name, mgr.id);
-        });
+        managers.forEach((mgr) => addManagerField(mgr.name, mgr.id));
         if (managers.length === 0) addManagerField();
     }
 
@@ -554,17 +620,12 @@
             const id = row.querySelector('.mgr-id').value.trim();
             if (name && id) newManagers.push({ name, id });
         });
-        
         const token = document.getElementById('tgTokenInput').value.trim();
-
         db.ref('config/managers').set(newManagers);
         db.ref('config/tg_token').set(token);
-        
         managers = newManagers;
         tgBotToken = token;
-        
         if(currentChatId) openChat(currentChatId);
-
         closeSettings();
         alert('Налаштування збережено!');
     }
