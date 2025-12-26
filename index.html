@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM v6.2 (Dynamic UI)</title>
+    <title>Latiao CRM v7.0 (Media Edition)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -54,22 +54,15 @@
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .user-info-box h2 { margin: 0; font-size: 20px; font-weight: 800; color: var(--text-dark); }
         
-        /* NEW TYPING ANIMATION STYLE */
-        .typing-container {
-            font-size: 13px; color: #666; margin-top: 4px; font-weight: 500;
-            display: flex; align-items: center; min-height: 20px;
-        }
-        .cursor {
-            display: inline-block; width: 2px; height: 14px; background-color: var(--primary);
-            margin-left: 2px; animation: blink 1s infinite;
-        }
+        /* Typing Animation */
+        .typing-container { font-size: 13px; color: #666; margin-top: 4px; font-weight: 500; display: flex; align-items: center; min-height: 20px; }
+        .cursor { display: inline-block; width: 2px; height: 14px; background-color: var(--primary); margin-left: 2px; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
         .header-actions { display: flex; gap: 8px; }
         .icon-btn { width: 38px; height: 38px; border-radius: 50%; border: none; background: #f0f2f5; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
         .icon-btn:hover { background: #e4e6eb; transform: scale(1.05); }
         .logout-btn:hover { background: #ffebee; color: red; }
-        
         .search-box { position: relative; margin-bottom: 10px; }
         .search-box input { width: 100%; padding: 12px 35px 12px 14px; box-sizing: border-box; border: 1px solid #eee; border-radius: 12px; background: #f9f9f9; font-size: 15px; }
         .search-box span { position: absolute; right: 12px; top: 12px; color: #999; }
@@ -107,34 +100,40 @@
         .status-active { background: var(--green); color: white; }
         .status-closed { background: #ecf0f1; color: #7f8c8d; }
         .btn-trash { background: none; border: 1px solid #eee; width: 36px; height: 36px; border-radius: 50%; color: #e74c3c; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; }
-        
         .btn-sms-toggle { background: #e3f2fd; color: #1565c0; border: none; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .btn-sms-toggle:hover { background: #bbdefb; }
 
-        /* --- SMS PANEL --- */
-        #smsPanel {
-            background: #f1f8ff; border-bottom: 1px solid #d0e3f0; padding: 10px 20px; display: none;
-            gap: 10px; align-items: center; animation: slideDown 0.3s ease; flex-shrink: 0;
-        }
+        /* SMS PANEL */
+        #smsPanel { background: #f1f8ff; border-bottom: 1px solid #d0e3f0; padding: 10px 20px; display: none; gap: 10px; align-items: center; animation: slideDown 0.3s ease; }
         @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .sms-input { padding: 8px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; width: 140px; }
         .sms-select { padding: 8px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; flex: 1; }
         .btn-send-sms { background: #1565c0; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; white-space: nowrap; }
-        .btn-send-sms:hover { background: #0d47a1; }
 
+        /* --- MESSAGES --- */
         .messages-area { flex: 1; padding: 20px; overflow-y: auto; background: #f4f7f6; display: flex; flex-direction: column; gap: 10px; }
         .msg { max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px; position: relative; display: flex; flex-direction: column; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .msg.user { align-self: flex-start; background: #fff; border-bottom-left-radius: 4px; color: var(--text-dark); }
         .msg.admin { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
         .msg-time { font-size: 10px; margin-top: 5px; align-self: flex-end; opacity: 0.7; }
+        
+        /* Media Styles */
+        .msg-img { max-width: 100%; border-radius: 10px; cursor: pointer; margin-bottom: 5px; }
+        .audio-player { width: 200px; height: 32px; }
 
         .scripts-bar { display: flex; gap: 8px; padding: 10px 15px; background: #fff; border-top: 1px solid #f0f0f0; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
         .script-chip { background: #f0f2f5; color: #444; padding: 6px 12px; border-radius: 16px; font-size: 12px; cursor: pointer; border: 1px solid #e1e4e8; font-weight: 500; transition: 0.2s; flex-shrink: 0; }
         .script-chip:hover { background: var(--primary); color: white; border-color: var(--primary); }
 
-        .input-area { padding: 10px 15px 15px 15px; display: flex; gap: 10px; background: #fff; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
+        /* INPUT AREA with MEDIA BUTTONS */
+        .input-area { padding: 10px 15px 15px 15px; display: flex; gap: 8px; background: #fff; padding-bottom: max(15px, env(safe-area-inset-bottom)); align-items: center; }
         .input-area input { flex: 1; padding: 12px 20px; border: 1px solid #ddd; border-radius: 25px; outline: none; font-size: 16px; background: #f9f9f9; transition: 0.2s; }
-        .send-btn { background: var(--primary); color: white; border: none; width: 48px; height: 48px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(230,33,23,0.3); transition: 0.2s; }
+        .send-btn { background: var(--primary); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; box-shadow: 0 4px 10px rgba(230,33,23,0.3); transition: 0.2s; }
+        
+        .media-btn { background: #f0f2f5; color: #555; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; transition: 0.2s; }
+        .media-btn:hover { background: #e4e6eb; }
+        .media-btn.recording { background: #e74c3c; color: white; animation: pulse-red 1.5s infinite; }
+        
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(231, 76, 60, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); } }
 
         /* --- SETTINGS MODAL --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
@@ -165,7 +164,6 @@
         .stat-num { font-size: 24px; font-weight: 800; display: block; }
         .promo-stats-box { margin-top: 20px; background: #fff; border-radius: 16px; padding: 15px; border: 1px solid #e1e4e8; }
         .promo-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
-        .promo-row:last-child { border-bottom: none; }
         .promo-count { font-weight: bold; color: var(--primary); }
 
         @media (max-width: 768px) {
@@ -214,22 +212,10 @@
 
             <h4 style="margin:0 0 15px 0; color:#444;">Система</h4>
             <div class="setting-card">
-                <div class="input-group">
-                    <label>Telegram Bot Token</label>
-                    <input type="text" id="tgTokenInput" class="styled-input" placeholder="123456:ABC...">
-                </div>
-                <div class="input-group">
-                    <label>Admin ID (Logs)</label>
-                    <input type="text" id="adminIdInput" class="styled-input" placeholder="Ваш ID">
-                </div>
-                <div class="input-group">
-                    <label>TurboSMS Token (HTTP API)</label>
-                    <input type="text" id="turboTokenInput" class="styled-input" placeholder="c11bf...">
-                </div>
-                <div class="input-group">
-                    <label>TurboSMS Sender (Альфа-ім'я)</label>
-                    <input type="text" id="turboSenderInput" class="styled-input" placeholder="Напр. Latiao">
-                </div>
+                <div class="input-group"><label>Telegram Bot Token</label><input type="text" id="tgTokenInput" class="styled-input" placeholder="123456:ABC..."></div>
+                <div class="input-group"><label>Admin ID (Logs)</label><input type="text" id="adminIdInput" class="styled-input" placeholder="Ваш ID"></div>
+                <div class="input-group"><label>TurboSMS Token (HTTP API)</label><input type="text" id="turboTokenInput" class="styled-input" placeholder="c11bf..."></div>
+                <div class="input-group"><label>TurboSMS Sender (Альфа-ім'я)</label><input type="text" id="turboSenderInput" class="styled-input" placeholder="Напр. Latiao (або Msg)"></div>
             </div>
         </div>
 
@@ -237,9 +223,7 @@
             <div id="promosList"></div>
             <button onclick="addPromoField()" class="btn-add">+ Створити промо-код</button>
             <h4 style="margin:20px 0 10px 0; color:#444;">Топ відправників</h4>
-            <div class="promo-stats-box" id="promoStatsList">
-                <p style="color:#999; font-size:12px; text-align:center;">Завантаження...</p>
-            </div>
+            <div class="promo-stats-box" id="promoStatsList"><p style="color:#999;font-size:12px;text-align:center;">Завантаження...</p></div>
         </div>
 
         <div id="tab-scripts" class="tab-content">
@@ -271,19 +255,13 @@
 <div class="sidebar">
     <div class="sidebar-header">
         <div class="top-row">
-            <div class="user-info-box">
-                <h2>Latiao CRM</h2>
-                <div id="dynamicGreeting" class="typing-container"></div>
-            </div>
+            <div class="user-info-box"><h2>Latiao CRM</h2><div id="dynamicGreeting" class="typing-container"></div></div>
             <div class="header-actions">
                 <button id="btnSettings" class="icon-btn" onclick="openSettings()" title="Налаштування" style="display:none;">⚙️</button>
                 <button class="icon-btn logout-btn" onclick="logout()" title="Вихід">🚪</button>
             </div>
         </div>
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Пошук..." onkeyup="renderChatList()">
-            <span>🔍</span>
-        </div>
+        <div class="search-box"><input type="text" id="searchInput" placeholder="Пошук..." onkeyup="renderChatList()"><span>🔍</span></div>
         <div class="filters">
             <button class="filter-btn active" id="btnOpen" onclick="setFilter('open')">Відкриті</button>
             <button class="filter-btn" id="btnClosed" onclick="setFilter('closed')">Закриті</button>
@@ -297,18 +275,11 @@
     <div class="chat-header" id="chatHeader">
         <div class="header-left">
             <button class="back-btn" onclick="closeChatMobile()">⬅</button>
-            <div class="header-info">
-                <h3 id="chatUserTitle">Чат</h3>
-                <select id="managerSelect" class="manager-select" onchange="manualAssign(this.value)">
-                    <option value="">Немає</option>
-                </select>
-            </div>
+            <div class="header-info"><h3 id="chatUserTitle">Чат</h3><select id="managerSelect" class="manager-select" onchange="manualAssign(this.value)"><option value="">Немає</option></select></div>
         </div>
         <div class="header-right">
             <button class="btn-sms-toggle" onclick="toggleSmsPanel()">🎁 SMS</button>
-            <button id="statusBtn" class="status-toggle status-active" onclick="toggleChatStatus()">
-                <span id="statusIcon">✓</span><span id="statusText">Завершити</span>
-            </button>
+            <button id="statusBtn" class="status-toggle status-active" onclick="toggleChatStatus()"><span id="statusIcon">✓</span><span id="statusText">Завершити</span></button>
             <button onclick="archiveChat()" class="btn-trash">🗑</button>
         </div>
     </div>
@@ -320,14 +291,16 @@
     </div>
 
     <div class="messages-area" id="messagesArea">
-        <div style="text-align:center; margin-top:50px; color:#ccc;">
-            <div style="font-size:40px; margin-bottom:10px;">💬</div>Оберіть діалог
-        </div>
+        <div style="text-align:center; margin-top:50px; color:#ccc;"><div style="font-size:40px; margin-bottom:10px;">💬</div>Оберіть діалог</div>
     </div>
     
     <div id="quickScripts" class="scripts-bar" style="display:none;"></div>
 
     <div class="input-area" id="inputArea">
+        <input type="file" id="imgUpload" accept="image/*" style="display:none;" onchange="handleImageUpload(this)">
+        <button class="media-btn" onclick="document.getElementById('imgUpload').click()">📎</button>
+        <button class="media-btn" id="micBtn" onclick="toggleRecording()">🎤</button>
+        
         <input type="text" id="msgInput" placeholder="Повідомлення..." onkeypress="handleEnter(event)">
         <button class="send-btn" onclick="sendMessage()">➤</button>
     </div>
@@ -338,11 +311,13 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let allChats = [], managers = [], savedScripts = [], savedFaq = [], savedPromos = [];
-    let currentChatId = null, currentChatStatus = 'open', filterType = 'open';
-    let tgBotToken = "", superAdminId = "", turboToken = "", turboSender = "";
-    let currentUser = null;
-    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
+    let allChats=[], managers=[], savedScripts=[], savedFaq=[], savedPromos=[];
+    let currentChatId=null, currentChatStatus='open', filterType='open';
+    let tgBotToken="", superAdminId="", turboToken="", turboSender="";
+    let currentUser=null; const SESSION_TIMEOUT = 24*60*60*1000;
+    
+    // Audio Rec
+    let mediaRecorder, audioChunks = [];
 
     checkSession();
 
@@ -362,7 +337,6 @@
         db.ref('config/managers').once('value', snap => {
             const mgrs = snap.val() || [];
             let found = mgrs.find(m => m.login === login && m.password === pass);
-            // Allow admin/admin for initial setup
             if (!found && login === 'admin' && pass === 'admin' && mgrs.length === 0) {
                 found = { name: 'Super Admin', id: 'root', role: 'admin' };
             } else if (found && found.login === 'admin') {
@@ -381,7 +355,7 @@
 
     function initApp() {
         document.getElementById('loginScreen').style.display = 'none';
-        startTyper(currentUser.name); // Start Animation
+        startTyper(currentUser.name);
         
         if (currentUser.role === 'admin') {
             document.getElementById('btnSettings').style.display = 'flex';
@@ -421,7 +395,6 @@
         setInterval(checkAutoReassignment, 30000); 
     }
 
-    // --- TYPING ANIMATION ---
     function startTyper(name) {
         const hour = new Date().getHours();
         let greeting = "Привіт";
@@ -434,14 +407,9 @@
         const container = document.getElementById('dynamicGreeting');
         container.innerHTML = '<span id="typeTarget"></span><span class="cursor"></span>';
         const target = document.getElementById('typeTarget');
-        
         let i = 0;
         function type() {
-            if (i < text.length) {
-                target.innerHTML += text.charAt(i);
-                i++;
-                setTimeout(type, 80); // Typing speed
-            }
+            if (i < text.length) { target.innerHTML += text.charAt(i); i++; setTimeout(type, 80); }
         }
         type();
     }
@@ -451,7 +419,8 @@
         const search = document.getElementById('searchInput').value.toLowerCase();
         container.innerHTML = '';
         const filtered = allChats.filter(chat => {
-            const matchSearch = chat.id.toLowerCase().includes(search) || (chat.lastMsg && chat.lastMsg.toLowerCase().includes(search));
+            const last = chat.lastMsg || "";
+            const matchSearch = chat.id.toLowerCase().includes(search) || last.toLowerCase().includes(search);
             const status = chat.status || 'open';
             if (filterType === 'open') return matchSearch && status !== 'closed';
             if (filterType === 'closed') return matchSearch && status === 'closed';
@@ -462,7 +431,8 @@
             const div = document.createElement('div');
             const time = new Date(chat.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             const isClosed = chat.status === 'closed';
-            const isUserLast = chat.lastMsg && !chat.lastMsg.startsWith("Ви:") && !chat.lastMsg.startsWith("👋");
+            const last = chat.lastMsg || "...";
+            const isUserLast = !last.startsWith("Ви:") && !last.startsWith("👋") && !last.startsWith("Bot:") && !last.startsWith("🎁");
             const timeDiff = Date.now() - chat.ts;
             const isStale = !isClosed && isUserLast && timeDiff > 5 * 60 * 1000;
             let badgesHtml = '';
@@ -476,11 +446,7 @@
 
             div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''} ${chat.unread ? 'unread' : ''} ${isClosed ? 'closed' : ''}`;
             div.onclick = () => openChat(chat.id);
-            div.innerHTML = `
-                <div class="chat-top"><span class="chat-id">#${chat.id.substring(0,6)}</span><span class="chat-time">${time}</span></div>
-                <div class="chat-preview">${chat.lastMsg || '...'}</div>
-                <div class="badges-row">${badgesHtml}</div>
-            `;
+            div.innerHTML = `<div class="chat-top"><span class="chat-id">#${chat.id.substring(0,6)}</span><span class="chat-time">${time}</span></div><div class="chat-preview">${last}</div><div class="badges-row">${badgesHtml}</div>`;
             container.appendChild(div);
         });
     }
@@ -539,6 +505,59 @@
         });
     }
 
+    /* --- MEDIA HANDLERS --- */
+    function handleImageUpload(input) {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.src = e.target.result;
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const MAX_WIDTH = 800;
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                    canvas.width = width; canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    sendMessage(dataUrl, 'image');
+                }
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async function toggleRecording() {
+        const btn = document.getElementById('micBtn');
+        if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        const base64 = reader.result;
+                        sendMessage(base64, 'audio');
+                    };
+                    reader.readAsDataURL(blob);
+                };
+                mediaRecorder.start();
+                btn.classList.add('recording');
+            } catch (err) { alert('Мікрофон недоступний'); }
+        } else {
+            mediaRecorder.stop();
+            btn.classList.remove('recording');
+        }
+    }
+
     function renderQuickScripts() {
         const bar = document.getElementById('quickScripts');
         if (savedScripts.length === 0) { bar.style.display = 'none'; return; }
@@ -547,12 +566,24 @@
     }
     function useScript(text) { document.getElementById('msgInput').value = text; document.getElementById('msgInput').focus(); }
     function closeChatMobile() { document.body.classList.remove('chat-open'); }
+    
     function renderMessage(msg, container) {
         const div = document.createElement('div'); div.className = `msg ${msg.type === 'admin' ? 'admin' : 'user'}`;
         let timeStr = ""; if (msg.ts) timeStr = new Date(msg.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        div.innerHTML = `<span>${msg.text}</span><span class="msg-time">${timeStr}</span>`;
+        
+        let content = "";
+        if (msg.msgType === 'image') {
+            content = `<img src="${msg.text}" class="msg-img" onclick="window.open(this.src)">`;
+        } else if (msg.msgType === 'audio') {
+            content = `<audio controls src="${msg.text}" class="audio-player"></audio>`;
+        } else {
+            content = `<span>${msg.text}</span>`;
+        }
+
+        div.innerHTML = `${content}<span class="msg-time">${timeStr}</span>`;
         container.appendChild(div);
     }
+
     function updateStatusButtonUI(status) {
         const btn = document.getElementById('statusBtn'); const icon = document.getElementById('statusIcon'); const text = document.getElementById('statusText');
         if (status === 'closed') { btn.className = 'status-toggle status-closed'; icon.innerText = '↺'; text.innerText = 'Відновити'; }
@@ -576,7 +607,6 @@
         db.ref('active_chats/' + chatId).update({ assignedTo: managerId });
         const mgr = managers.find(m => m.id == managerId);
         
-        // Auto-Greet
         if (mgr) {
             const systemMsg = `👋 Менеджер ${mgr.name} приєднався до чату і вже ознайомлюється з вашим питанням.`;
             db.ref('support/' + chatId).limitToLast(1).once('value', snap => {
@@ -624,13 +654,13 @@
             }
         });
     }
-    function sendMessage() {
+    function sendMessage(text = null, type = 'text') {
         const input = document.getElementById('msgInput');
-        const text = input.value.trim();
-        if (!text || !currentChatId) return;
+        const val = text || input.value.trim();
+        if (!val || !currentChatId) return;
         const ts = Date.now();
-        db.ref('support/' + currentChatId).push({ text, type: 'admin', ts });
-        db.ref('active_chats/' + currentChatId).update({ lastMsg: 'Ви: ' + text, ts, unread: false, status: 'open' });
+        db.ref('support/' + currentChatId).push({ text: val, type: 'admin', msgType: type, ts });
+        db.ref('active_chats/' + currentChatId).update({ lastMsg: (type === 'text' ? 'Ви: ' + val : (type === 'image' ? '📷 Фото' : '🎤 Голосове')), ts, unread: false, status: 'open' });
         input.value = '';
     }
     function handleEnter(e) { if (e.key === 'Enter') sendMessage(); }
