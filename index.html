@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Latiao Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #e62117;
+            --bg-chrome: #dfe1e5;
+            --bg-app: #f1f3f4;
+            --sidebar-w: 320px;
+            --header-h: 80px; /* Висота шапки браузера */
+        }
+
+        * { box-sizing: border-box; }
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: #000; height: 100vh; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+
+        /* --- Стилізація під Chrome Browser --- */
+        .chrome-window {
+            width: 100%; height: 100%;
+            background: #fff;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Якщо екран великий, робимо відступи, щоб виглядало як вікно */
+        @media (min-width: 1000px) {
+            .chrome-window {
+                width: 90%; height: 90%;
+                border-radius: 8px;
+                box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            }
+        }
+
+        .chrome-header {
+            background: #dfe1e5;
+            padding-top: 8px;
+            flex-shrink: 0;
+            display: flex; flex-direction: column;
+        }
+
+        .tabs-bar {
+            display: flex; align-items: center; padding: 0 10px; gap: 8px;
+        }
+        .window-controls { display: flex; gap: 6px; margin-right: 15px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.red { background: #ff5f56; }
+        .dot.yellow { background: #ffbd2e; }
+        .dot.green { background: #27c93f; }
+
+        .chrome-tab {
+            background: #fff;
+            padding: 8px 20px;
+            border-radius: 8px 8px 0 0;
+            font-size: 12px; color: #333;
+            display: flex; align-items: center; gap: 8px;
+            position: relative;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        .chrome-tab::after {
+            content: ''; position: absolute; right: -15px; bottom: 0; width: 15px; height: 15px;
+            background: radial-gradient(circle at top right, transparent 15px, #fff 0);
+        }
+        .chrome-tab::before {
+            content: ''; position: absolute; left: -15px; bottom: 0; width: 15px; height: 15px;
+            background: radial-gradient(circle at top left, transparent 15px, #fff 0);
+        }
+
+        .address-bar-row {
+            background: #fff; padding: 6px 10px; border-bottom: 1px solid #ddd;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .nav-icons { color: #5f6368; font-size: 14px; display: flex; gap: 10px; }
+        .url-bar {
+            flex: 1; background: #f1f3f4; border-radius: 20px;
+            padding: 6px 15px; font-size: 13px; color: #202124;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .secure-lock { color: #1a73e8; font-size: 12px; }
+
+        /* --- Основна частина Admin Panel --- */
+        .admin-body {
+            flex: 1; display: flex; overflow: hidden; position: relative;
+        }
+
+        /* Сайдбар (Список чатів) */
+        .sidebar {
+            width: var(--sidebar-w);
+            border-right: 1px solid #eee;
+            background: #f8f9fa;
+            display: flex; flex-direction: column;
+            transition: transform 0.3s ease;
+            z-index: 2;
+        }
+        
+        .sidebar-header {
+            padding: 20px; border-bottom: 1px solid #eee;
+        }
+        .sidebar-header h2 { margin: 0; font-size: 18px; color: #333; }
+        .stats { font-size: 12px; color: #888; margin-top: 5px; }
+
+        .chat-list {
+            flex: 1; overflow-y: auto;
+        }
+        
+        .chat-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+        .chat-item:hover { background: #fff; }
+        .chat-item.active { background: #fff; border-left: 4px solid var(--primary); }
+        
+        .chat-item-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .user-id { font-weight: 600; font-size: 14px; color: #333; }
+        .msg-time { font-size: 11px; color: #999; }
+        .last-msg { font-size: 13px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .new-indicator {
+            width: 8px; height: 8px; background: var(--primary); border-radius: 50%;
+            position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+            display: none;
+        }
+        .chat-item.unread .new-indicator { display: block; }
+        .chat-item.unread .user-id { color: var(--primary); }
+
+        /* Область чату */
+        .chat-area {
+            flex: 1; display: flex; flex-direction: column; background: #fff;
+            position: relative;
+        }
+        
+        /* Заглушка, коли чат не вибрано */
+        .empty-state {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ccc;
+        }
+        .empty-state svg { width: 64px; height: 64px; margin-bottom: 20px; opacity: 0.2; }
+
+        /* Вміст чату */
+        .chat-view {
+            display: none; flex-direction: column; height: 100%;
+        }
+        .chat-view.visible { display: flex; }
+
+        .chat-header {
+            padding: 15px 20px; border-bottom: 1px solid #eee;
+            display: flex; align-items: center; justify-content: space-between;
+            background: #fff;
+        }
+        .back-btn { display: none; background: none; border: none; font-size: 20px; cursor: pointer; margin-right: 10px; }
+        
+        .messages-container {
+            flex: 1; padding: 20px; overflow-y: auto; background: #fdfdfd;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        .msg {
+            max-width: 70%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4;
+            position: relative; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .msg.user {
+            align-self: flex-start; background: #f0f0f0; color: #333;
+            border-bottom-left-radius: 2px;
+        }
+        .msg.admin {
+            align-self: flex-end; background: var(--primary); color: #fff;
+            border-bottom-right-radius: 2px;
+        }
+        .msg-ts { font-size: 10px; margin-top: 4px; opacity: 0.7; text-align: right; display: block; }
+
+        .input-area {
+            padding: 15px; border-top: 1px solid #eee; background: #fff;
+            display: flex; gap: 10px;
+        }
+        .input-area input {
+            flex: 1; padding: 12px 15px; border: 1px solid #ddd; border-radius: 24px;
+            outline: none; font-size: 14px; transition: 0.2s;
+        }
+        .input-area input:focus { border-color: var(--primary); }
+        .send-btn {
+            width: 45px; height: 45px; border-radius: 50%; background: var(--primary);
+            color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: transform 0.2s;
+        }
+        .send-btn:hover { transform: scale(1.05); }
+
+        /* --- Мобільна адаптація --- */
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; position: absolute; height: 100%; }
+            .chat-area { width: 100%; position: absolute; height: 100%; transform: translateX(100%); transition: transform 0.3s ease; }
+            
+            .chat-area.active { transform: translateX(0); }
+            .back-btn { display: block; }
+            
+            /* Chrome header adjustments for mobile */
+            .chrome-tab { max-width: 150px; }
+            .url-bar { font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="chrome-window">
+    <div class="chrome-header">
+        <div class="tabs-bar">
+            <div class="window-controls">
+                <div class="dot red"></div>
+                <div class="dot yellow"></div>
+                <div class="dot green"></div>
+            </div>
+            <div class="chrome-tab">
+                <span>Latiao Support Admin</span>
+                <span style="font-size: 10px; cursor:pointer">✕</span>
+            </div>
+            <div style="font-size: 18px; color: #5f6368; margin-left: auto;">+</div>
+        </div>
+        <div class="address-bar-row">
+            <div class="nav-icons">
+                <span>←</span><span>→</span><span>↻</span>
+            </div>
+            <div class="url-bar">
+                <span class="secure-lock">🔒</span>
+                latiao-snack.com/admin/support
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-body">
+        
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Вхідні повідомлення</h2>
+                <div class="stats" id="chat-stats">Завантаження...</div>
+            </div>
+            <div class="chat-list" id="chat-list">
+                </div>
+        </div>
+
+        <div class="chat-area" id="chat-area">
+            
+            <div class="empty-state" id="empty-state">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                </svg>
+                <p>Оберіть чат для спілкування</p>
+            </div>
+
+            <div class="chat-view" id="chat-view">
+                <div class="chat-header">
+                    <div style="display:flex; align-items:center;">
+                        <button class="back-btn" onclick="closeChat()">←</button>
+                        <div>
+                            <strong id="current-user-id" style="font-size:16px;">User</strong>
+                            <div style="font-size:11px; color:#27c93f;">• Онлайн</div>
+                        </div>
+                    </div>
+                    <button onclick="deleteChat()" style="color:#e62117; background:none; border:none; cursor:pointer; font-size:12px;">Видалити</button>
+                </div>
+                
+                <div class="messages-container" id="messages-container">
+                    </div>
+
+                <form class="input-area" onsubmit="sendAdminMessage(event)">
+                    <input type="text" id="admin-input" placeholder="Напишіть відповідь..." autocomplete="off">
+                    <button type="submit" class="send-btn">➤</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+    // --- КОНФІГУРАЦІЯ ---
+    const firebaseConfig = { databaseURL: "https://latiao-chat-default-rtdb.firebaseio.com" };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Звук повідомлення
+    const notificationSound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
+
+    let currentChatId = null;
+    let messagesListener = null;
+
+    // --- ЛОГІКА СПИСКУ ЧАТІВ ---
+    const chatListEl = document.getElementById('chat-list');
+    const statsEl = document.getElementById('chat-stats');
+
+    db.ref('active_chats').on('value', snap => {
+        const chats = [];
+        snap.forEach(child => {
+            chats.push({ id: child.key, ...child.val() });
+        });
+
+        // Сортуємо: найновіші зверху
+        chats.sort((a, b) => b.ts - a.ts);
+
+        statsEl.innerText = `Активних діалогів: ${chats.length}`;
+        renderChatList(chats);
+    });
+
+    function renderChatList(chats) {
+        chatListEl.innerHTML = '';
+        chats.forEach(chat => {
+            const date = new Date(chat.ts);
+            const timeStr = date.getHours().toString().padStart(2,'0') + ':' + date.getMinutes().toString().padStart(2,'0');
+            const isToday = new Date().toDateString() === date.toDateString();
+            const dateStr = isToday ? timeStr : date.toLocaleDateString();
+
+            const div = document.createElement('div');
+            div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''}`;
+            div.onclick = () => loadChat(chat.id);
+            
+            div.innerHTML = `
+                <div class="chat-item-top">
+                    <span class="user-id">${chat.id.substring(0, 10)}...</span>
+                    <span class="msg-time">${dateStr}</span>
+                </div>
+                <div class="last-msg">${chat.lastMsg || 'Зображення/Файл'}</div>
+                <div class="new-indicator"></div>
+            `;
+            chatListEl.appendChild(div);
+        });
+    }
+
+    // --- ЛОГІКА ОКРЕМОГО ЧАТУ ---
+    function loadChat(userId) {
+        currentChatId = userId;
+        
+        // UI updates
+        document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('chat-view').classList.add('visible');
+        document.getElementById('current-user-id').innerText = userId;
+        
+        // Mobile UI slide
+        if (window.innerWidth <= 768) {
+            document.getElementById('chat-area').classList.add('active');
+        }
+
+        // Highlight in list
+        document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+        // (Можна додати логіку підсвітки, але список перерендериться при оновленні)
+
+        // Unsubscribe prev
+        if (messagesListener) messagesListener.off();
+
+        const container = document.getElementById('messages-container');
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">Завантаження...</div>';
+
+        // Subscribe new
+        messagesListener = db.ref('support/' + userId);
+        messagesListener.on('value', snap => {
+            container.innerHTML = '';
+            let lastMsgType = '';
+            
+            snap.forEach(child => {
+                const m = child.val();
+                renderMessage(m, container);
+                lastMsgType = m.type;
+                
+                // Mark user msgs as read (logic mockup)
+                if (m.type === 'user' && !m.read) {
+                    child.ref.update({ read: true });
+                }
+            });
+            
+            container.scrollTop = container.scrollHeight;
+            
+            // Play sound if new message is from user and we are looking at it
+            if(lastMsgType === 'user') {
+                // notificationSound.play().catch(e => {}); 
+            }
+        });
+    }
+
+    function renderMessage(msg, container) {
+        const div = document.createElement('div');
+        div.className = `msg ${msg.type}`;
+        
+        const date = new Date(msg.ts);
+        const time = date.getHours().toString().padStart(2,'0') + ':' + date.getMinutes().toString().padStart(2,'0');
+
+        div.innerHTML = `
+            ${msg.text}
+            <span class="msg-ts">${time}</span>
+        `;
+        container.appendChild(div);
+    }
+
+    // --- ВІДПРАВКА ПОВІДОМЛЕННЯ ---
+    function sendAdminMessage(e) {
+        e.preventDefault();
+        const input = document.getElementById('admin-input');
+        const text = input.value.trim();
+        
+        if (!text || !currentChatId) return;
+
+        const ts = Date.now();
+
+        // 1. Push message to conversation
+        db.ref('support/' + currentChatId).push({
+            text: text,
+            type: 'admin',
+            ts: ts,
+            read: true
+        });
+
+        // 2. Update active chats list preview
+        db.ref('active_chats/' + currentChatId).update({
+            lastMsg: 'Ви: ' + text,
+            ts: ts
+        });
+
+        input.value = '';
+    }
+
+    // --- МОБІЛЬНА НАВІГАЦІЯ ---
+    function closeChat() {
+        document.getElementById('chat-area').classList.remove('active');
+        setTimeout(() => {
+            currentChatId = null;
+            if(messagesListener) messagesListener.off();
+            document.getElementById('chat-view').classList.remove('visible');
+            document.getElementById('empty-state').style.display = 'flex';
+        }, 300);
+    }
+
+    function deleteChat() {
+        if(!confirm('Видалити історію цього чату?')) return;
+        db.ref('support/' + currentChatId).remove();
+        db.ref('active_chats/' + currentChatId).remove();
+        closeChat();
+    }
+
+</script>
+
+</body>
+</html>
