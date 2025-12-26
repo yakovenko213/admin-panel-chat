@@ -2,747 +2,463 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao Workspace</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат підтримки (No Auth)</title>
     <style>
         :root {
-            --primary: #e62117;
-            --primary-dark: #c41c13;
-            --primary-light: #fff0f0;
-            --bg-body: #f0f2f5;
-            --bg-sidebar: #ffffff;
-            --bg-chat: #efeae2; /* Колір фону як у месенджерах */
-            --white: #ffffff;
-            --text-main: #111b21;
-            --text-sec: #667781;
-            --border: #e9edef;
-            --shadow: 0 2px 5px rgba(0,0,0,0.05);
-            --bubble-user: #ffffff;
-            --bubble-admin: #e62117; /* Твій брендовий червоний */
+            --primary-color: #4a90e2;
+            --bg-color: #f4f7f6;
+            --chat-bg: #ffffff;
+            --admin-bg: #2c3e50;
+            --text-color: #333;
+            --msg-user: #dcf8c6;
+            --msg-admin: #e8e8e8;
         }
 
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
-        
-        body { 
-            margin: 0; padding: 0; 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg-body); 
-            height: 100vh; overflow: hidden;
-            color: var(--text-main);
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+            height: 90vh;
         }
 
-        /* --- LAYOUT --- */
-        .app-container { display: flex; width: 100%; height: 100%; }
-
-        /* SIDEBAR */
-        .sidebar {
-            width: 70px; background: var(--bg-sidebar); border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; align-items: center; padding: 15px 0; z-index: 100;
-        }
-        .logo { 
-            font-size: 24px; margin-bottom: 30px; width: 44px; height: 44px;
-            background: var(--primary-light); border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; cursor: default;
-        }
-        .nav-item {
-            width: 44px; height: 44px; margin-bottom: 10px; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            color: var(--text-sec); cursor: pointer; transition: 0.2s; position: relative;
-        }
-        .nav-item:hover { background: #f5f5f5; color: var(--primary); }
-        .nav-item.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(230, 33, 23, 0.3); }
-        .nav-item svg { width: 22px; height: 22px; stroke-width: 2; }
-        
-        /* TOOLTIP */
-        .tooltip {
-            position: absolute; left: 55px; background: #333; color: #fff;
-            padding: 4px 8px; border-radius: 4px; font-size: 12px; opacity: 0; pointer-events: none;
-            white-space: nowrap; transition: 0.2s; z-index: 101;
-        }
-        .nav-item:hover .tooltip { opacity: 1; left: 60px; }
-
-        /* MAIN AREA */
-        .main-content { flex: 1; position: relative; overflow: hidden; background: #fff; }
-        .view-section { width: 100%; height: 100%; display: none; }
-        .view-section.active { display: flex; }
-
-        /* --- CHATS VIEW --- */
-        .chats-layout { display: flex; width: 100%; height: 100%; }
-
-        /* Chat List */
-        .chat-list-panel {
-            width: 350px; background: #fff; border-right: 1px solid var(--border);
-            display: flex; flex-direction: column;
-        }
-        .cl-header { padding: 16px; border-bottom: 1px solid var(--border); background: #f7f7f8; }
-        .cl-title { font-size: 20px; font-weight: 700; margin: 0 0 12px 0; }
-        .cl-filters { display: flex; background: #e3e5e8; padding: 3px; border-radius: 8px; }
-        .filter-btn {
-            flex: 1; text-align: center; padding: 6px; font-size: 13px; font-weight: 500;
-            border-radius: 6px; cursor: pointer; color: #555; transition: 0.2s;
-        }
-        .filter-btn.active { background: #fff; color: #000; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-
-        .cl-items { flex: 1; overflow-y: auto; }
-        .c-item {
-            padding: 12px 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer;
-            display: flex; gap: 12px; transition: background 0.2s;
-        }
-        .c-item:hover { background: #f5f5f5; }
-        .c-item.active { background: #fff5f5; border-left: 4px solid var(--primary); }
-        
-        .c-avatar {
-            width: 42px; height: 42px; border-radius: 50%; background: #dfe1e5;
-            color: #555; font-weight: 600; display: flex; align-items: center; justify-content: center;
-            font-size: 16px; flex-shrink: 0;
-        }
-        .c-info { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center; }
-        .c-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-        .c-name { font-weight: 600; font-size: 15px; color: var(--text-main); }
-        .c-time { font-size: 11px; color: var(--text-sec); }
-        .c-msg { font-size: 13px; color: var(--text-sec); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .c-manager { font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px; color: #555; margin-top: 4px; align-self: flex-start; }
-
-        /* Chat Area (Right Side) */
-        .chat-area {
-            flex: 1; display: flex; flex-direction: column; background: #f2f2f2;
-            position: relative; 
-            /* Subtle Pattern Background */
-            background-image: radial-gradient(#ddd 1px, transparent 1px);
-            background-size: 20px 20px;
+        /* --- Layout --- */
+        .container {
+            display: flex;
+            width: 100%;
+            gap: 20px;
         }
 
-        .chat-header {
-            height: 64px; background: #fff; border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 10;
-        }
-        .ch-user-info h3 { margin: 0; font-size: 16px; color: var(--text-main); }
-        .ch-user-info span { font-size: 12px; color: #27c93f; display: flex; align-items: center; gap: 4px; }
-        
-        .ch-controls { display: flex; gap: 8px; }
-        .btn-action {
-            background: #fff; border: 1px solid #ddd; padding: 6px 12px;
-            border-radius: 6px; font-size: 13px; cursor: pointer; transition: 0.2s;
-            display: flex; align-items: center; gap: 6px;
-        }
-        .btn-action:hover { background: #f7f7f7; border-color: #ccc; }
-        .btn-action.danger { color: #d32f2f; border-color: #ffcdd2; }
-        .btn-action.danger:hover { background: #ffebee; }
-
-        /* MESSAGES STYLING */
-        .messages-container {
-            flex: 1; padding: 20px 40px; overflow-y: auto; 
-            display: flex; flex-direction: column; gap: 12px;
+        /* --- Admin Panel Styles --- */
+        .admin-panel {
+            flex: 2;
+            background: var(--chat-bg);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in-out;
         }
 
-        .msg-row { display: flex; width: 100%; margin-bottom: 4px; }
-        .msg-row.admin { justify-content: flex-end; }
-        .msg-row.user { justify-content: flex-start; }
+        .admin-header {
+            background: var(--admin-bg);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-        .bubble {
-            max-width: 60%; padding: 10px 14px; 
-            position: relative; font-size: 14.5px; line-height: 1.45;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: #ecf0f1;
+        }
+
+        .chat-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 5px solid var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .chat-item.closed {
+            border-left-color: #95a5a6;
+            opacity: 0.7;
+            background: #f9f9f9;
+        }
+
+        .status-badge {
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border-radius: 12px;
+            color: white;
+        }
+        .status-open { background-color: #2ecc71; }
+        .status-closed { background-color: #95a5a6; }
+
+        /* --- Active Chat View (Admin) --- */
+        .active-chat-view {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #ddd;
+            background: white;
+        }
+
+        .chat-controls {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+            text-align: right;
+        }
+
+        /* --- User Widget Styles --- */
+        .user-widget {
+            flex: 1;
+            background: var(--chat-bg);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            animation: slideIn 0.5s ease-out;
+            max-width: 400px;
+        }
+
+        .widget-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+
+        /* --- Shared Chat Styles --- */
+        .messages-area {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            line-height: 1.4;
+            position: relative;
             word-wrap: break-word;
-        }
-        
-        .bubble.user {
-            background: var(--bubble-user);
-            color: var(--text-main);
-            border-radius: 0 12px 12px 12px;
-        }
-        /* Triangle for user */
-        .bubble.user::before {
-            content: ""; position: absolute; top: 0; left: -8px;
-            width: 0; height: 0; 
-            border-top: 10px solid var(--bubble-user);
-            border-left: 10px solid transparent;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .bubble.admin {
-            background: var(--primary); /* Червоний */
-            color: #fff;
-            border-radius: 12px 0 12px 12px;
-        }
-        /* Triangle for admin */
-        .bubble.admin::before {
-            content: ""; position: absolute; top: 0; right: -8px;
-            width: 0; height: 0; 
-            border-top: 10px solid var(--primary);
-            border-right: 10px solid transparent;
+        .msg-user {
+            align-self: flex-end;
+            background-color: var(--msg-user);
+            border-bottom-right-radius: 2px;
         }
 
-        .msg-meta {
-            display: block; font-size: 10px; margin-top: 4px; text-align: right; opacity: 0.8;
+        .msg-admin {
+            align-self: flex-start;
+            background-color: var(--msg-admin);
+            border-bottom-left-radius: 2px;
         }
-        .msg-meta span { margin-left: 4px; font-weight: bold; }
 
-        /* INPUT AREA */
         .input-area {
-            padding: 15px 20px; background: #fff; border-top: 1px solid var(--border);
-            display: flex; gap: 10px; align-items: flex-end; position: relative;
-        }
-        
-        /* Scripts Popup */
-        .scripts-popup {
-            position: absolute; bottom: 70px; left: 20px; width: 250px;
-            background: #fff; border: 1px solid #ddd; border-radius: 8px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.15); display: none;
-            max-height: 300px; overflow-y: auto; z-index: 20;
-        }
-        .script-option {
-            padding: 10px 14px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 13px;
-        }
-        .script-option:hover { background: #f9f9f9; color: var(--primary); }
-        .script-option strong { display: block; margin-bottom: 2px; color: #333; }
-        .script-option span { font-size: 11px; color: #888; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-        .btn-icon {
-            width: 42px; height: 42px; border-radius: 50%; border: 1px solid #ddd;
-            background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 18px; color: #555; transition: 0.2s; flex-shrink: 0;
-        }
-        .btn-icon:hover { background: #f0f0f0; color: var(--primary); }
-        
-        .chat-input {
-            flex: 1; min-height: 42px; max-height: 120px; padding: 11px 16px;
-            border: 1px solid #ddd; border-radius: 21px; background: #f9f9f9;
-            font-size: 15px; resize: none; font-family: inherit; outline: none;
-        }
-        .chat-input:focus { background: #fff; border-color: var(--primary); }
-        
-        .btn-send {
-            width: 42px; height: 42px; border-radius: 50%; background: var(--primary);
-            color: #fff; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: transform 0.2s; box-shadow: 0 2px 5px rgba(230,33,23,0.3);
-        }
-        .btn-send:hover { transform: scale(1.05); background: var(--primary-dark); }
-
-        /* --- SETTINGS VIEW --- */
-        .settings-view { padding: 40px; max-width: 900px; margin: 0 auto; overflow-y: auto; height: 100%; }
-        .s-header { margin-bottom: 30px; }
-        .s-card {
-            background: #fff; border-radius: 12px; padding: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 24px; border: 1px solid #eee;
-        }
-        .s-card h3 { margin: 0 0 20px 0; font-size: 18px; color: #333; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; }
-        
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .inp { padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; width: 100%; }
-        .inp:focus { border-color: var(--primary); }
-        
-        .btn-add {
-            background: #111; color: #fff; padding: 10px 20px; border-radius: 8px; border: none;
-            cursor: pointer; font-weight: 500; height: 100%;
-        }
-        .btn-add:hover { background: #333; }
-
-        .list-items { display: flex; flex-direction: column; gap: 8px; }
-        .list-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 14px; background: #f9f9fb; border-radius: 8px; border: 1px solid #eee;
-        }
-        .row-info b { display: block; font-size: 14px; color: #333; margin-bottom: 2px; }
-        .row-info span { display: block; font-size: 12px; color: #666; }
-        .btn-del {
-            background: #fff; border: 1px solid #ffcdd2; color: #d32f2f;
-            width: 30px; height: 30px; border-radius: 6px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .btn-del:hover { background: #d32f2f; color: #fff; }
-
-        /* LOGIN */
-        .login-wrap {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff; z-index: 1000; display: flex; align-items: center; justify-content: center;
-            background-image: radial-gradient(#e62117 1px, transparent 1px); background-size: 30px 30px;
-        }
-        .login-box {
-            background: #fff; padding: 40px; border-radius: 16px; width: 340px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1); text-align: center; border: 1px solid #eee;
-        }
-        .btn-login {
-            width: 100%; background: var(--primary); color: #fff; padding: 12px;
-            border-radius: 8px; border: none; font-size: 16px; margin-top: 15px; cursor: pointer;
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
         }
 
-        /* MOBILE */
-        @media (max-width: 768px) {
-            .app-container { flex-direction: column; }
-            .sidebar { 
-                width: 100%; height: 60px; flex-direction: row; padding: 0 20px; 
-                justify-content: space-around; order: 2; border-right: none; border-top: 1px solid #eee;
-            }
-            .logo { display: none; }
-            .nav-item { margin: 0; }
-            .main-content { order: 1; }
-            .chat-list-panel { width: 100%; }
-            .chat-area { 
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 200; 
-                transform: translateX(100%); transition: transform 0.3s;
-            }
-            .chat-area.active { transform: translateX(0); }
-            .mobile-back { display: block !important; margin-right: 10px; font-size: 20px; cursor: pointer; }
-            .messages-container { padding: 15px; }
-            .bubble { max-width: 75%; }
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+            transition: border-color 0.3s;
         }
-        .mobile-back { display: none; }
-        .empty-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #ccc; }
+
+        input:focus {
+            border-color: var(--primary-color);
+        }
+
+        button {
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #357abd;
+        }
+
+        button.btn-danger {
+            background: #e74c3c;
+        }
+        button.btn-danger:hover {
+            background: #c0392b;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
     </style>
 </head>
 <body>
 
-    <div class="login-wrap" id="login-screen">
-        <div class="login-box">
-            <h1 style="margin: 0 0 10px 0;">🌶️</h1>
-            <h2 style="margin: 0 0 20px 0; color: #333;">Latiao Admin</h2>
-            <input type="text" id="l-user" class="inp" placeholder="Логін" style="margin-bottom: 10px;">
-            <input type="password" id="l-pass" class="inp" placeholder="Пароль">
-            <button class="btn-login" onclick="login()">Увійти</button>
-        </div>
-    </div>
-
-    <div class="app-container">
-        <div class="sidebar">
-            <div class="logo">🌶️</div>
-            
-            <div class="nav-item active" onclick="switchView('chats')" title="Чати">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-                <div class="tooltip">Чати</div>
-            </div>
-
-            <div class="nav-item" id="nav-settings" onclick="switchView('settings')" title="Налаштування" style="display:none;">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                <div class="tooltip">Налаштування</div>
-            </div>
-
-            <div class="nav-item" style="margin-top: auto;" onclick="logout()">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                <div class="tooltip">Вихід</div>
-            </div>
-        </div>
-
-        <div class="main-content">
-            
-            <div id="view-chats" class="view-section active chats-layout">
-                <div class="chat-list-panel">
-                    <div class="cl-header">
-                        <h2 class="cl-title">Діалоги</h2>
-                        <div class="cl-filters">
-                            <div class="filter-btn active" onclick="setFilter('active', this)">Активні</div>
-                            <div class="filter-btn" onclick="setFilter('closed', this)">Архів</div>
-                        </div>
-                    </div>
-                    <div class="cl-items" id="chats-list">
-                        </div>
-                </div>
-
-                <div class="chat-area" id="chat-window">
-                    <div class="empty-placeholder" id="chat-empty">
-                        <div style="font-size: 50px; opacity: 0.2; margin-bottom: 20px;">💬</div>
-                        <p>Оберіть чат для спілкування</p>
-                    </div>
-
-                    <div id="chat-interface" style="display:none; flex-direction:column; height:100%;">
-                        <div class="chat-header">
-                            <div style="display: flex; align-items: center;">
-                                <span class="mobile-back" onclick="closeChat()">←</span>
-                                <div class="ch-user-info">
-                                    <h3 id="current-user-id">User</h3>
-                                    <span id="current-manager">Не призначено</span>
-                                </div>
-                            </div>
-                            <div class="ch-controls">
-                                <select id="mgr-select" class="btn-action" onchange="assignManager(this.value)">
-                                    <option value="">Призначити...</option>
-                                </select>
-                                <button class="btn-action" onclick="askPhone()">📱 Номер</button>
-                                <button class="btn-action danger" onclick="archiveChat()">Архів</button>
-                            </div>
-                        </div>
-
-                        <div class="messages-container" id="messages-feed"></div>
-
-                        <form class="input-area" onsubmit="sendMessage(event)">
-                            <div class="scripts-popup" id="scripts-pop"></div>
-                            
-                            <div class="btn-icon" onclick="toggleScripts()" title="Скрипти">⚡</div>
-                            <input type="text" id="msg-input" class="chat-input" placeholder="Напишіть повідомлення..." autocomplete="off">
-                            <button type="submit" class="btn-send">➤</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-settings" class="view-section">
-                <div class="settings-view">
-                    <div class="s-header">
-                        <h1>Налаштування Workspace</h1>
-                    </div>
-
-                    <div class="s-card">
-                        <h3>👥 Менеджери</h3>
-                        <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr 1.5fr 0.5fr;">
-                            <input id="m-name" class="inp" placeholder="Ім'я">
-                            <input id="m-login" class="inp" placeholder="Логін">
-                            <input id="m-pass" class="inp" placeholder="Пароль">
-                            <input id="m-tg" class="inp" placeholder="Telegram Chat ID (цифри)">
-                            <button class="btn-add" onclick="addManager()">+</button>
-                        </div>
-                        <div class="list-items" id="list-managers"></div>
-                    </div>
-
-                    <div class="s-card">
-                        <h3>⚡ Скрипти повідомлень</h3>
-                        <div class="form-grid" style="grid-template-columns: 1fr 2fr 0.5fr;">
-                            <input id="s-title" class="inp" placeholder="Назва (напр. Привітання)">
-                            <input id="s-text" class="inp" placeholder="Текст повідомлення">
-                            <button class="btn-add" onclick="addScript()">+</button>
-                        </div>
-                        <div class="list-items" id="list-scripts"></div>
-                    </div>
-
-                    <div class="s-card">
-                        <h3>❓ FAQ (Для віджета)</h3>
-                        <div class="form-grid" style="grid-template-columns: 1fr 2fr 0.5fr;">
-                            <input id="f-q" class="inp" placeholder="Питання">
-                            <input id="f-a" class="inp" placeholder="Відповідь">
-                            <button class="btn-add" onclick="addFaq()">+</button>
-                        </div>
-                        <div class="list-items" id="list-faq"></div>
-                    </div>
-                    
-                    <div class="s-card" style="display:flex; align-items:center; gap:15px;">
-                        <input type="checkbox" id="w-status" onchange="toggleWidget(this.checked)" style="width:20px; height:20px;">
-                        <label for="w-status" style="font-weight:600; font-size:16px;">Увімкнути чат на сайті</label>
-                    </div>
-
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script>
-    // --- SETUP ---
-    const TG_TOKEN = "8538208852:AAFASKSeci30FVNU5sPl3vkmVSPLcfWFqEI";
-    const firebaseConfig = { databaseURL: "https://latiao-chat-default-rtdb.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    let currentUser = null;
-    let currentChatId = null;
-    let chatFilter = 'active';
-    let msgListener = null;
-
-    // --- AUTH ---
-    function login() {
-        const u = document.getElementById('l-user').value.trim();
-        const p = document.getElementById('l-pass').value.trim();
-        
-        if(u==='admin' && p==='latiao2025') {
-            authSuccess({name:'Admin', role:'admin', id:'root'});
-            return;
-        }
-
-        db.ref('config/managers').once('value', s => {
-            let found = false;
-            s.forEach(c => {
-                const m = c.val();
-                if(m.login === u && m.pass === p) {
-                    authSuccess({...m, id:c.key, role:'manager'});
-                    found = true;
-                }
-            });
-            if(!found) alert('Невірно!');
-        });
-    }
-
-    function authSuccess(user) {
-        currentUser = user;
-        document.getElementById('login-screen').style.display = 'none';
-        if(user.role === 'admin') {
-            document.getElementById('nav-settings').style.display = 'flex';
-            initSettings();
-        }
-        initChats();
-    }
+<div class="container">
     
-    function logout() { location.reload(); }
+    <div class="user-widget">
+        <div class="widget-header">
+            <h3>Чат з підтримкою</h3>
+        </div>
+        <div class="messages-area" id="userMessages">
+            <div class="message msg-admin">Привіт! Чим можу допомогти?</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Ваше повідомлення...">
+            <button onclick="sendUserMessage()">Send</button>
+        </div>
+    </div>
 
-    // --- NAVIGATION ---
-    function switchView(view) {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    <div class="admin-panel">
+        <div class="admin-header">
+            <h2>Адмін Панель</h2>
+            <button class="btn-danger" onclick="clearAllData()">Очистити все</button>
+        </div>
         
-        if(view === 'chats') {
-            document.getElementById('view-chats').classList.add('active');
-            document.querySelector('.nav-item:nth-child(2)').classList.add('active');
-        } else {
-            document.getElementById('view-settings').classList.add('active');
-            document.querySelector('#nav-settings').classList.add('active');
-        }
-    }
+        <div style="display: flex; flex: 1; overflow: hidden;">
+            <div class="chat-list" id="chatList">
+                </div>
 
-    // --- CHAT LIST ---
-    function setFilter(type, btn) {
-        chatFilter = type;
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        initChats();
-    }
-
-    function initChats() {
-        db.ref('active_chats').on('value', snap => {
-            const list = document.getElementById('chats-list');
-            list.innerHTML = '';
-            const arr = [];
-            snap.forEach(c => arr.push({id: c.key, ...c.val()}));
-            arr.sort((a,b) => b.ts - a.ts);
-
-            arr.forEach(chat => {
-                if(chatFilter === 'active' && chat.status === 'closed') return;
-                if(chatFilter === 'closed' && chat.status !== 'closed') return;
-
-                const time = new Date(chat.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                const div = document.createElement('div');
-                div.className = `c-item ${currentChatId === chat.id ? 'active' : ''}`;
-                div.onclick = () => openChat(chat);
-                
-                div.innerHTML = `
-                    <div class="c-avatar">${chat.id[0].toUpperCase()}</div>
-                    <div class="c-info">
-                        <div class="c-row">
-                            <span class="c-name">Клієнт ${chat.id.substring(0,4)}</span>
-                            <span class="c-time">${time}</span>
-                        </div>
-                        <div class="c-msg">${chat.lastMsg || '...'}</div>
-                        ${chat.managerName ? `<div class="c-manager">👤 ${chat.managerName}</div>` : ''}
-                    </div>
-                `;
-                list.appendChild(div);
-            });
-        });
-    }
-
-    // --- CHAT WINDOW ---
-    function openChat(chat) {
-        currentChatId = chat.id;
-        document.getElementById('chat-empty').style.display = 'none';
-        document.getElementById('chat-interface').style.display = 'flex';
-        document.getElementById('chat-window').classList.add('active'); // Mobile
-
-        document.getElementById('current-user-id').innerText = `Клієнт: ${chat.id}`;
-        document.getElementById('current-manager').innerHTML = chat.managerName ? `Менеджер: <b>${chat.managerName}</b>` : 'Менеджер: Не призначено';
-
-        // Auto assign if active and empty
-        if(!chat.managerId && chatFilter === 'active') autoAssign(chat.id);
-
-        // Load Messages
-        if(msgListener) msgListener.off();
-        const feed = document.getElementById('messages-feed');
-        feed.innerHTML = '';
-
-        msgListener = db.ref('support/' + chat.id);
-        msgListener.on('value', snap => {
-            feed.innerHTML = '';
-            snap.forEach(c => renderMsg(c.val(), feed));
-            feed.scrollTop = feed.scrollHeight;
-        });
-
-        loadManagersDropdown();
-    }
-
-    function renderMsg(m, container) {
-        const row = document.createElement('div');
-        row.className = `msg-row ${m.type}`;
-        
-        const time = new Date(m.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-        const check = (m.type === 'admin' && m.read) ? '<span style="color:#8dfcff;">✓✓</span>' : '<span>✓</span>';
-
-        row.innerHTML = `
-            <div class="bubble ${m.type}">
-                ${m.text}
-                <div class="msg-meta">${time} ${m.type==='admin' ? check : ''}</div>
+            <div class="active-chat-view">
+                <div class="chat-controls" id="chatControls" style="display:none;">
+                    <span id="currentChatStatus"></span>
+                    <button id="toggleStatusBtn" onclick="toggleChatStatus()">Завершити чат</button>
+                </div>
+                <div class="messages-area" id="adminMessages">
+                    <p style="text-align: center; color: #888; margin-top: 50px;">Оберіть чат ліворуч</p>
+                </div>
+                <div class="input-area" id="adminInputArea" style="display: none;">
+                    <input type="text" id="adminInput" placeholder="Відповісти...">
+                    <button onclick="sendAdminMessage()">Send</button>
+                </div>
             </div>
-        `;
-        container.appendChild(row);
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- Data Management ---
+    // Структура: { id: timestamp, messages: [{sender: 'user'|'admin', text: ''}], status: 'open'|'closed' }
+    let chats = JSON.parse(localStorage.getItem('chats')) || [];
+    let currentUserId = localStorage.getItem('currentUserId');
+    let activeAdminChatId = null;
+
+    // Створюємо ID для поточного користувача, якщо немає
+    if (!currentUserId) {
+        currentUserId = Date.now();
+        localStorage.setItem('currentUserId', currentUserId);
+        // Створюємо новий чат для цього юзера
+        createChat(currentUserId);
+    } else {
+        // Перевіряємо, чи існує чат для цього ID
+        const existing = chats.find(c => c.id == currentUserId);
+        if (!existing) createChat(currentUserId);
     }
 
-    function sendMessage(e) {
-        e.preventDefault();
-        const inp = document.getElementById('msg-input');
-        const text = inp.value.trim();
-        if(!text || !currentChatId) return;
-
-        db.ref('support/' + currentChatId).push({ text, type: 'admin', ts: Date.now(), read: false });
-        db.ref('active_chats/' + currentChatId).update({ lastMsg: 'Ви: ' + text, ts: Date.now() });
-        inp.value = '';
-        document.getElementById('scripts-pop').style.display = 'none';
+    function createChat(id) {
+        const newChat = { id: id, messages: [], status: 'open' };
+        chats.push(newChat);
+        saveChats();
     }
 
-    // --- ACTIONS ---
-    function archiveChat() {
-        if(confirm('Перенести в архів?')) {
-            db.ref('active_chats/'+currentChatId).update({status: 'closed'});
-            closeChat();
-        }
+    function saveChats() {
+        localStorage.setItem('chats', JSON.stringify(chats));
+        renderAdminChatList();
     }
 
-    function askPhone() {
-        const txt = "Напишіть, будь ласка, ваш контактний номер телефону 📞";
-        document.getElementById('msg-input').value = txt;
-    }
+    // --- User Logic ---
+    function sendUserMessage() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
 
-    function closeChat() {
-        document.getElementById('chat-window').classList.remove('active');
-        setTimeout(() => {
-            currentChatId = null;
-            if(msgListener) msgListener.off();
-            document.getElementById('chat-interface').style.display = 'none';
-            document.getElementById('chat-empty').style.display = 'flex';
-        }, 300);
-    }
-
-    // --- MANAGERS LOGIC ---
-    async function autoAssign(chatId) {
-        const h = new Date().getHours();
-        if(h >= 8) {
-            const s = await db.ref('config/managers').once('value');
-            const arr = [];
-            s.forEach(x => arr.push({id:x.key, ...x.val()}));
-            if(arr.length) {
-                const rnd = arr[Math.floor(Math.random()*arr.length)];
-                db.ref('active_chats/'+chatId).update({managerId:rnd.id, managerName:rnd.name});
+        const chat = chats.find(c => c.id == currentUserId);
+        if (chat) {
+            // Якщо чат був закритий, автоматично відкриваємо його при новому повідомленні
+            if (chat.status === 'closed') chat.status = 'open';
+            
+            chat.messages.push({ sender: 'user', text: text });
+            saveChats();
+            renderUserMessages();
+            
+            // Якщо адмін дивиться цей чат, оновити його
+            if (activeAdminChatId == currentUserId) {
+                renderAdminMessages(currentUserId);
             }
+            input.value = '';
         }
     }
 
-    function assignManager(mid) {
-        if(!mid) return;
-        db.ref('config/managers/'+mid).once('value', s => {
-            const m = s.val();
-            db.ref('active_chats/'+currentChatId).update({managerId:mid, managerName:m.name});
-            alert('Передано: ' + m.name);
-            if(m.tgId) {
-                fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ chat_id: m.tgId, text: `🔄 Вам передано чат з клієнтом!` })
-                });
-            }
-        });
-    }
-
-    function loadManagersDropdown() {
-        db.ref('config/managers').once('value', s => {
-            const sel = document.getElementById('mgr-select');
-            sel.innerHTML = '<option value="">Призначити...</option>';
-            s.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.key;
-                opt.innerText = c.val().name;
-                sel.appendChild(opt);
-            });
-        });
-    }
-
-    // --- SCRIPTS LOGIC ---
-    function toggleScripts() {
-        const pop = document.getElementById('scripts-pop');
-        if(pop.style.display === 'block') {
-            pop.style.display = 'none';
-            return;
-        }
+    function renderUserMessages() {
+        const chat = chats.find(c => c.id == currentUserId);
+        const container = document.getElementById('userMessages');
+        container.innerHTML = '<div class="message msg-admin">Привіт! Чим можу допомогти?</div>'; // Default greeting
         
-        pop.innerHTML = '<div style="padding:10px; color:#999;">Завантаження...</div>';
-        pop.style.display = 'block';
-
-        db.ref('config/scripts').once('value', snap => {
-            pop.innerHTML = '';
-            if(!snap.exists()) {
-                pop.innerHTML = '<div style="padding:10px;">Пусто</div>';
-                return;
-            }
-            snap.forEach(c => {
-                const s = c.val();
-                const d = document.createElement('div');
-                d.className = 'script-option';
-                d.innerHTML = `<strong>${s.title}</strong><span>${s.text}</span>`;
-                d.onclick = () => {
-                    document.getElementById('msg-input').value = s.text;
-                    pop.style.display = 'none';
-                    document.getElementById('msg-input').focus();
-                };
-                pop.appendChild(d);
+        if (chat) {
+            chat.messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = `message ${msg.sender === 'user' ? 'msg-user' : 'msg-admin'}`;
+                div.innerText = msg.text;
+                container.appendChild(div);
             });
-        });
+            container.scrollTop = container.scrollHeight;
+            
+            // Блокування вводу якщо чат закритий (опціонально, тут лишаємо відкритим для "реоупена")
+            const input = document.getElementById('userInput');
+            const btn = input.nextElementSibling;
+            if (chat.status === 'closed') {
+                input.placeholder = "Чат завершено. Напишіть, щоб відкрити знову.";
+            } else {
+                input.placeholder = "Ваше повідомлення...";
+            }
+        }
     }
 
-    // --- SETTINGS CRUD ---
-    function initSettings() {
-        // Managers
-        db.ref('config/managers').on('value', s => renderList(s, 'list-managers', (d, k) => `
-            <div class="row-info"><b>${d.name}</b><span>Логін: ${d.login} | TG: ${d.tgId || '-'}</span></div>
-        `, 'config/managers'));
-        
-        // Scripts
-        db.ref('config/scripts').on('value', s => renderList(s, 'list-scripts', (d, k) => `
-            <div class="row-info"><b>${d.title}</b><span>${d.text}</span></div>
-        `, 'config/scripts'));
+    // --- Admin Logic ---
+    function renderAdminChatList() {
+        const list = document.getElementById('chatList');
+        list.innerHTML = '';
 
-        // FAQ
-        db.ref('config/faq').on('value', s => renderList(s, 'list-faq', (d, k) => `
-            <div class="row-info"><b>Q: ${d.q}</b><span>A: ${d.a}</span></div>
-        `, 'config/faq'));
-
-        db.ref('config/status').on('value', s => document.getElementById('w-status').checked = s.val() || false);
-    }
-
-    function renderList(snap, elId, htmlGen, refPath) {
-        const el = document.getElementById(elId);
-        el.innerHTML = '';
-        snap.forEach(c => {
+        chats.sort((a, b) => b.id - a.id).forEach(chat => {
             const div = document.createElement('div');
-            div.className = 'list-row';
-            div.innerHTML = htmlGen(c.val(), c.key);
-            const btn = document.createElement('div');
-            btn.className = 'btn-del';
-            btn.innerHTML = '✕';
-            btn.onclick = () => { if(confirm('Видалити?')) db.ref(`${refPath}/${c.key}`).remove(); };
-            div.appendChild(btn);
-            el.appendChild(div);
+            div.className = `chat-item ${chat.status === 'closed' ? 'closed' : ''}`;
+            const lastMsg = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1].text : 'Новий чат';
+            const shortMsg = lastMsg.length > 20 ? lastMsg.substring(0, 20) + '...' : lastMsg;
+            
+            div.innerHTML = `
+                <div>
+                    <strong>User #${chat.id.toString().slice(-4)}</strong>
+                    <div style="font-size: 12px; color: #666;">${shortMsg}</div>
+                </div>
+                <span class="status-badge ${chat.status === 'open' ? 'status-open' : 'status-closed'}">
+                    ${chat.status === 'open' ? 'Active' : 'Done'}
+                </span>
+            `;
+            div.onclick = () => loadAdminChat(chat.id);
+            list.appendChild(div);
         });
     }
 
-    function addManager() {
-        const n=id('m-name'), l=id('m-login'), p=id('m-pass'), t=id('m-tg');
-        if(n.value && l.value) {
-            db.ref('config/managers').push({name:n.value, login:l.value, pass:p.value, tgId:t.value});
-            n.value=''; l.value=''; p.value=''; t.value='';
+    function loadAdminChat(chatId) {
+        activeAdminChatId = chatId;
+        document.getElementById('adminInputArea').style.display = 'flex';
+        document.getElementById('chatControls').style.display = 'block';
+        renderAdminMessages(chatId);
+    }
+
+    function renderAdminMessages(chatId) {
+        const chat = chats.find(c => c.id == chatId);
+        const container = document.getElementById('adminMessages');
+        const statusBtn = document.getElementById('toggleStatusBtn');
+        container.innerHTML = '';
+
+        if (chat) {
+            chat.messages.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = `message ${msg.sender === 'admin' ? 'msg-user' : 'msg-admin'}`; // Admin sees their msg on right
+                div.innerText = msg.text;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+
+            // Update status button text
+            if (chat.status === 'open') {
+                statusBtn.innerText = "Закрити чат";
+                statusBtn.className = "btn-danger";
+            } else {
+                statusBtn.innerText = "Відкрити чат";
+                statusBtn.className = "";
+            }
         }
     }
-    function addScript() {
-        const t=id('s-title'), x=id('s-text');
-        if(t.value && x.value) {
-            db.ref('config/scripts').push({title:t.value, text:x.value});
-            t.value=''; x.value='';
+
+    function sendAdminMessage() {
+        if (!activeAdminChatId) return;
+        const input = document.getElementById('adminInput');
+        const text = input.value.trim();
+        
+        if (text) {
+            const chat = chats.find(c => c.id == activeAdminChatId);
+            if (chat) {
+                chat.messages.push({ sender: 'admin', text: text });
+                if (chat.status === 'closed') chat.status = 'open'; // Auto reopen
+                saveChats();
+                renderAdminMessages(activeAdminChatId);
+                
+                // Якщо це поточний юзер, оновити його віджет
+                if (activeAdminChatId == currentUserId) {
+                    renderUserMessages();
+                }
+                input.value = '';
+            }
         }
     }
-    function addFaq() {
-        const q=id('f-q'), a=id('f-a');
-        if(q.value) {
-            db.ref('config/faq').push({q:q.value, a:a.value});
-            q.value=''; a.value='';
+
+    function toggleChatStatus() {
+        if (!activeAdminChatId) return;
+        const chat = chats.find(c => c.id == activeAdminChatId);
+        if (chat) {
+            chat.status = chat.status === 'open' ? 'closed' : 'open';
+            saveChats();
+            renderAdminMessages(activeAdminChatId); // Refresh button text
+            
+            // Оновити вигляд у юзера
+            if (activeAdminChatId == currentUserId) {
+                renderUserMessages();
+            }
         }
     }
-    function toggleWidget(v) { db.ref('config/status').set(v); }
-    function id(x) { return document.getElementById(x); }
+
+    function clearAllData() {
+        if(confirm("Видалити всю історію переписок?")) {
+            localStorage.clear();
+            location.reload();
+        }
+    }
+
+    // Init
+    renderUserMessages();
+    renderAdminChatList();
+
+    // Polling simulation (щоб оновлювалося в реальному часі в межах однієї сторінки)
+    setInterval(() => {
+        // У реальному проекті тут був би WebSocket або fetch
+        // Тут ми просто перевіряємо, чи змінився localStorage іншою вкладкою (якщо відкриєте 2 вікна)
+        const storedChats = JSON.parse(localStorage.getItem('chats'));
+        if (JSON.stringify(storedChats) !== JSON.stringify(chats)) {
+            chats = storedChats;
+            renderAdminChatList();
+            if (activeAdminChatId) renderAdminMessages(activeAdminChatId);
+            renderUserMessages();
+        }
+    }, 1000);
 
 </script>
+
 </body>
 </html>
