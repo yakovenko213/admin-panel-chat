@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM v2.1</title>
+    <title>Latiao CRM v3.0 (Visual Upgrade)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -14,6 +14,10 @@
             --sidebar-bg: #fff;
             --border: #e1e4e8;
             --active-item: #fff5f5;
+            --green: #2ecc71;
+            --orange: #f39c12;
+            --red: #e74c3c;
+            --grey: #95a5a6;
         }
 
         body {
@@ -33,24 +37,25 @@
             display: flex; align-items: center; justify-content: center;
         }
         .login-box {
-            background: white; padding: 40px; border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 300px;
+            background: white; padding: 40px; border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 300px;
             text-align: center;
         }
-        .login-box h2 { margin-top: 0; color: #333; }
         .login-input {
             width: 100%; padding: 12px; margin-bottom: 10px;
-            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+            border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box;
+            font-size: 16px;
         }
         .login-btn {
             width: 100%; padding: 12px; background: var(--primary);
-            color: white; border: none; border-radius: 8px;
+            color: white; border: none; border-radius: 10px;
             font-size: 16px; font-weight: bold; cursor: pointer;
+            transition: 0.2s;
         }
 
         /* --- Sidebar --- */
         .sidebar {
-            width: 350px;
+            width: 360px;
             background: var(--sidebar-bg);
             border-right: 1px solid var(--border);
             display: flex;
@@ -67,208 +72,147 @@
         }
 
         .top-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
         }
+        .user-info-box h2 { margin: 0; font-size: 20px; font-weight: 800; color: #333; }
+        .user-info-badge { font-size: 12px; color: #666; background: #f0f2f5; padding: 4px 10px; border-radius: 12px; margin-top: 4px; display: inline-block; }
 
-        .user-info-box {
-            display: flex; flex-direction: column;
-        }
-        .user-info-badge {
-            font-size: 12px; color: #666; background: #f0f2f5;
-            padding: 4px 8px; border-radius: 12px; display: inline-block;
-            margin-top: 4px; max-width: fit-content;
-        }
-
-        /* --- NEW BUTTON STYLES --- */
-        .header-actions {
-            display: flex; gap: 8px;
-        }
-        
+        .header-actions { display: flex; gap: 8px; }
         .icon-btn {
-            width: 36px; height: 36px;
-            border-radius: 50%;
-            border: none;
-            background: #f0f2f5;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; cursor: pointer;
-            transition: all 0.2s ease;
+            width: 38px; height: 38px; border-radius: 50%; border: none; background: #f0f2f5;
+            display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: 0.2s;
         }
-        .icon-btn:hover {
-            background: #e4e6eb; transform: scale(1.05);
-        }
-        
-        /* Logout button special style */
-        .logout-btn:hover {
-            background: #ffebee; color: red;
-        }
-
-        /* ----------------------- */
+        .icon-btn:hover { background: #e4e6eb; transform: scale(1.05); }
+        .logout-btn:hover { background: #ffebee; color: red; }
 
         .search-box { position: relative; margin-bottom: 10px; }
         .search-box input {
-            width: 100%; padding: 10px 35px 10px 12px;
-            box-sizing: border-box; border: 1px solid #ddd;
-            border-radius: 10px; background: #f9f9f9; font-size: 16px;
+            width: 100%; padding: 12px 35px 12px 14px; box-sizing: border-box; border: 1px solid #eee;
+            border-radius: 12px; background: #f9f9f9; font-size: 15px; transition: 0.2s;
         }
-        .search-box span { position: absolute; right: 10px; top: 10px; color: #999; }
+        .search-box input:focus { background: #fff; border-color: #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); outline: none; }
+        .search-box span { position: absolute; right: 12px; top: 12px; color: #999; }
 
-        .filters { display: flex; gap: 5px; background: #f0f0f0; padding: 4px; border-radius: 10px; }
+        .filters { display: flex; gap: 5px; background: #f0f2f5; padding: 4px; border-radius: 12px; }
         .filter-btn {
-            flex: 1; background: none; border: none; padding: 8px;
-            cursor: pointer; font-size: 13px; color: #666;
-            border-radius: 8px; font-weight: 600; transition: 0.2s;
+            flex: 1; background: none; border: none; padding: 8px; cursor: pointer;
+            font-size: 13px; color: #666; border-radius: 10px; font-weight: 600; transition: 0.2s;
         }
-        .filter-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .filter-btn.active { background: white; color: #333; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
+        /* --- Chat List Items --- */
         .chat-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-
+        
         .chat-item {
-            padding: 16px; border-bottom: 1px solid #f0f0f0;
-            cursor: pointer; position: relative; background: #fff;
+            padding: 16px; border-bottom: 1px solid #f0f0f0; cursor: pointer; position: relative; background: #fff; transition: 0.2s;
         }
-        .chat-item:active { background: #f5f5f5; }
+        .chat-item:hover { background: #fafafa; }
         .chat-item.active { background: var(--active-item); border-left: 4px solid var(--primary); }
-        .chat-item.unread { background: #fffcfc; }
-        .chat-item.unread strong { color: var(--primary); }
-        .chat-item.closed { opacity: 0.7; background: #f8f9fa; }
+        .chat-item.closed { opacity: 0.6; filter: grayscale(0.8); background: #fdfdfd; }
 
-        .assigned-tag {
-            font-size: 10px; background: #eef2f5; color: #555;
-            padding: 2px 6px; border-radius: 4px; margin-left: 5px; border: 1px solid #ddd;
-            vertical-align: middle;
+        .chat-top { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .chat-id { font-weight: 700; font-size: 15px; color: #333; }
+        .chat-time { font-size: 11px; color: #999; }
+        
+        .chat-preview { font-size: 13px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
+        
+        /* --- BADGES --- */
+        .badges-row { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
+        
+        .badge {
+            font-size: 10px; padding: 3px 8px; border-radius: 6px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        
+        .badge-new { background: var(--red); color: white; animation: pulse 2s infinite; }
+        .badge-stale { background: var(--orange); color: white; display: flex; align-items: center; gap: 3px; }
+        .badge-manager { background: #eef2f5; color: #555; border: 1px solid #e1e4e8; font-weight: 600; text-transform: none; }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(231, 76, 60, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
         }
 
         /* --- Main Area --- */
-        .main {
-            flex: 1; display: flex; flex-direction: column;
-            background: #fff; position: relative; z-index: 1;
-        }
+        .main { flex: 1; display: flex; flex-direction: column; background: #fff; position: relative; z-index: 1; }
 
         .chat-header {
-            height: 60px; border-bottom: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 15px; background: #fff; flex-shrink: 0;
+            height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center;
+            justify-content: space-between; padding: 0 20px; background: #fff; flex-shrink: 0;
         }
 
-        .back-btn {
-            display: none; background: none; border: none; font-size: 24px;
-            color: #333; cursor: pointer; padding: 0 10px 0 0;
-        }
-        
-        .header-left { display: flex; align-items: center; overflow: hidden; }
-        .header-title-box { display: flex; flex-direction: column; overflow: hidden; }
-        .header-title-box strong { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .back-btn { display: none; background: none; border: none; font-size: 24px; color: #333; padding-right: 15px; }
 
+        .header-info h3 { margin: 0; font-size: 16px; font-weight: 700; }
         .manager-select {
-            padding: 4px; border-radius: 6px; border: 1px solid #ddd;
-            font-size: 12px; background: #fff; margin-top: 2px;
+            padding: 4px 8px; border-radius: 6px; border: 1px solid #ddd; font-size: 12px; background: #f9f9f9; margin-top: 4px;
         }
+
+        /* Improved Status Button */
+        .status-toggle {
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 16px; border-radius: 20px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .status-toggle:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.1); }
         
-        .header-right { display: flex; gap: 8px; }
-        .status-btn {
-            padding: 6px 12px; border-radius: 6px; font-size: 12px;
-            cursor: pointer; border: none; font-weight: 600;
-        }
-        .btn-close-chat { background: #e0f7fa; color: #006064; }
-        .btn-open-chat { background: #ffebee; color: #c62828; }
-        .btn-icon { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+        .status-active { background: var(--green); color: white; }
+        .status-closed { background: #ecf0f1; color: #7f8c8d; }
+
+        .btn-trash { background: none; border: 1px solid #eee; width: 36px; height: 36px; border-radius: 50%; color: #e74c3c; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-trash:hover { background: #fff5f5; border-color: #ffdcdc; }
 
         .messages-area {
-            flex: 1; padding: 15px; overflow-y: auto;
-            background: #f4f7f6; display: flex; flex-direction: column; gap: 10px;
-            -webkit-overflow-scrolling: touch;
+            flex: 1; padding: 20px; overflow-y: auto; background: #f4f7f6;
+            display: flex; flex-direction: column; gap: 10px;
         }
 
         .msg {
-            max-width: 75%; padding: 10px 14px; border-radius: 16px;
-            font-size: 15px; position: relative; display: flex; flex-direction: column;
-            word-wrap: break-word;
+            max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px; position: relative;
+            display: flex; flex-direction: column; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
-        .msg.user { align-self: flex-start; background: #fff; border: 1px solid #eee; border-bottom-left-radius: 4px; }
+        .msg.user { align-self: flex-start; background: #fff; border-bottom-left-radius: 4px; color: #333; }
         .msg.admin { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
-        .msg-time { font-size: 10px; margin-top: 4px; align-self: flex-end; opacity: 0.7; }
-        .msg.admin .msg-time { color: rgba(255,255,255, 0.9); }
-        .msg.user .msg-time { color: #999; }
+        .msg-time { font-size: 10px; margin-top: 5px; align-self: flex-end; opacity: 0.7; }
 
         .input-area {
-            padding: 10px; border-top: 1px solid var(--border);
-            display: flex; gap: 10px; background: #fff;
-            padding-bottom: max(10px, env(safe-area-inset-bottom));
+            padding: 15px; border-top: 1px solid var(--border); display: flex; gap: 10px; background: #fff;
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
         }
         .input-area input {
-            flex: 1; padding: 12px 15px; border: 1px solid #ddd;
-            border-radius: 24px; outline: none; font-size: 16px; background: #f9f9f9;
+            flex: 1; padding: 12px 20px; border: 1px solid #ddd; border-radius: 25px; outline: none; font-size: 16px; background: #f9f9f9; transition: 0.2s;
         }
+        .input-area input:focus { background: #fff; border-color: #ccc; }
         .send-btn {
-            background: var(--primary); color: white; border: none;
-            width: 48px; height: 48px; border-radius: 50%;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            background: var(--primary); color: white; border: none; width: 48px; height: 48px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(230,33,23,0.3); transition: 0.2s;
         }
+        .send-btn:hover { transform: scale(1.05); }
 
-        /* --- Settings Modal & Stats --- */
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 1000;
-            align-items: center; justify-content: center;
-        }
-        .modal-content {
-            background: white; padding: 0; border-radius: 16px;
-            width: 95%; max-width: 500px; overflow: hidden;
-            display: flex; flex-direction: column; max-height: 90vh;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        
+        /* --- Settings Modal --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: white; width: 95%; max-width: 500px; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; }
         .modal-tabs { display: flex; background: #f0f0f0; padding: 5px; }
-        .tab-btn {
-            flex: 1; padding: 10px; border: none; background: none;
-            cursor: pointer; font-weight: 600; color: #666; border-radius: 8px;
-        }
-        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-
+        .tab-btn { flex: 1; padding: 12px; border: none; background: none; cursor: pointer; font-weight: 600; color: #666; border-radius: 10px; }
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .tab-content { padding: 20px; overflow-y: auto; display: none; }
         .tab-content.active { display: block; }
-
-        .manager-row { 
-            display: grid; grid-template-columns: 1fr 1fr; gap: 5px; 
-            margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; 
-        }
-        .manager-row input { padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 100%; box-sizing: border-box; }
-        .btn-save {
-            background: var(--primary); color: white; width: 100%;
-            padding: 12px; margin-top: 15px; border: none; border-radius: 10px;
-            font-size: 16px; font-weight: bold; cursor: pointer;
-        }
+        .manager-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+        .manager-row input { padding: 8px; border: 1px solid #ddd; border-radius: 8px; }
         
-        /* Stats Styles */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-box { background: #f9f9f9; border-radius: 10px; padding: 10px; text-align: center; border: 1px solid #eee; }
-        .stat-num { display: block; font-size: 20px; font-weight: bold; color: #333; }
-        .stat-label { font-size: 11px; color: #888; text-transform: uppercase; }
-        
-        .stat-list { display: flex; flex-direction: column; gap: 8px; }
-        .stat-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0; }
-        .stat-name { font-weight: 600; font-size: 14px; }
-        .stat-bar { display: flex; gap: 10px; font-size: 12px; }
-        .val-active { color: #e67e22; font-weight: bold; }
-        .val-done { color: #27ae60; font-weight: bold; }
+        .stat-box { background: #f9f9f9; padding: 15px; border-radius: 12px; text-align: center; }
+        .stat-num { font-size: 24px; font-weight: 800; display: block; }
+        .stat-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
 
-        /* --- MOBILE ADAPTATION --- */
         @media (max-width: 768px) {
             .sidebar { width: 100%; height: 100%; position: absolute; }
-            .main { width: 100%; height: 100%; position: absolute; transform: translateX(100%); transition: transform 0.3s ease; }
-            body.chat-open .sidebar { transform: translateX(-30%); display: none; } 
+            .main { width: 100%; height: 100%; position: absolute; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+            body.chat-open .sidebar { transform: translateX(-20%); opacity: 0; pointer-events: none; } 
             body.chat-open .main { transform: translateX(0); }
             .back-btn { display: block; }
-            .header-title-box { max-width: 140px; }
-            .status-btn span { display: none; }
-            .status-btn { padding: 8px; }
-            .status-btn::after { content: "✓"; }
-            .btn-open-chat::after { content: "↺"; }
             .chat-header { padding: 0 10px; }
+            .status-toggle span { display: none; } /* Icon only on mobile */
+            .status-toggle { padding: 10px; border-radius: 50%; width: 40px; height: 40px; justify-content: center; }
         }
     </style>
 </head>
@@ -276,11 +220,11 @@
 
 <div id="loginScreen">
     <div class="login-box">
-        <h2>Вхід в систему</h2>
+        <h2 style="color:var(--primary)">Latiao CRM</h2>
+        <p style="color:#666; margin-bottom:20px;">Вхід для персоналу</p>
         <input type="text" id="loginUser" class="login-input" placeholder="Логін">
         <input type="password" id="loginPass" class="login-input" placeholder="Пароль">
         <button class="login-btn" onclick="authenticate()">Увійти</button>
-        <p style="font-size:11px; color:#999; margin-top:15px;">*Сесія діє 24 години</p>
     </div>
 </div>
 
@@ -292,46 +236,35 @@
         </div>
 
         <div id="tab-settings" class="tab-content active">
-            <label style="font-size:12px; font-weight:bold;">Додавання менеджерів:</label>
-            <p style="font-size:10px; color:#666;">Ім'я | Telegram ID | Логін | Пароль</p>
+            <h4 style="margin-top:0;">Менеджери</h4>
             <div id="managersList"></div>
-            <button onclick="addManagerField()" style="background:#eee; border:none; padding:8px; border-radius:6px; width:100%; margin-top:5px;">+ Додати ряд</button>
+            <button onclick="addManagerField()" style="width:100%; padding:10px; background:#f0f2f5; border:none; border-radius:8px; font-weight:600; color:#555; cursor:pointer;">+ Додати менеджера</button>
 
-            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-            
-            <label style="font-size:12px; font-weight:bold;">Telegram Bot Token:</label>
-            <input type="text" id="tgTokenInput" placeholder="Token..." style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
-            
-            <label style="font-size:12px; font-weight:bold;">Admin ID (для логів):</label>
-            <input type="text" id="adminIdInput" placeholder="ID..." style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px;">
+            <h4 style="margin-bottom:10px;">Система</h4>
+            <input type="text" id="tgTokenInput" class="login-input" placeholder="Bot Token">
+            <input type="text" id="adminIdInput" class="login-input" placeholder="Admin TG ID (Logs)">
 
-            <button class="btn-save" onclick="saveSettings()">Зберегти зміни</button>
-            <button onclick="closeSettings()" style="width:100%; margin-top:10px; background:white; border:1px solid #ddd; padding:12px; border-radius:10px;">Закрити</button>
-            
-            <button onclick="logout()" style="width:100%; margin-top:10px; background:#fff5f5; color:red; border:1px solid #ffdcdc; padding:12px; border-radius:10px;">Вийти з системи</button>
+            <button onclick="saveSettings()" style="width:100%; padding:12px; background:var(--primary); color:white; border:none; border-radius:10px; font-weight:bold; margin-top:10px;">Зберегти</button>
+            <button onclick="closeSettings()" style="width:100%; padding:12px; background:white; border:1px solid #ddd; border-radius:10px; margin-top:10px;">Закрити</button>
         </div>
 
         <div id="tab-stats" class="tab-content">
             <div class="stat-grid">
                 <div class="stat-box">
                     <span class="stat-num" id="statTotal">0</span>
-                    <span class="stat-label">Всього</span>
+                    <span style="font-size:11px; color:#999;">ВСЬОГО</span>
                 </div>
                 <div class="stat-box">
                     <span class="stat-num" style="color:#e67e22" id="statActive">0</span>
-                    <span class="stat-label">В роботі</span>
+                    <span style="font-size:11px; color:#999;">В РОБОТІ</span>
                 </div>
                 <div class="stat-box">
                     <span class="stat-num" style="color:#27ae60" id="statClosed">0</span>
-                    <span class="stat-label">Закриті</span>
+                    <span style="font-size:11px; color:#999;">ЗАКРИТІ</span>
                 </div>
             </div>
-
-            <h4 style="margin:0 0 10px 0; font-size:14px; color:#666;">По менеджерах:</h4>
-            <div id="managerStatsList" class="stat-list">
-                </div>
-
-            <button onclick="closeSettings()" style="width:100%; margin-top:20px; background:white; border:1px solid #ddd; padding:12px; border-radius:10px;">Закрити</button>
+            <div id="managerStatsList"></div>
+            <button onclick="closeSettings()" style="width:100%; padding:12px; background:white; border:1px solid #ddd; border-radius:10px; margin-top:20px;">Закрити</button>
         </div>
     </div>
 </div>
@@ -340,18 +273,17 @@
     <div class="sidebar-header">
         <div class="top-row">
             <div class="user-info-box">
-                <h2 style="margin:0; font-size:20px;">Latiao Admin</h2>
-                <span id="currentUserDisplay" class="user-info-badge">Гість</span>
+                <h2>Latiao CRM</h2>
+                <span id="currentUserDisplay" class="user-info-badge">Завантаження...</span>
             </div>
-            
             <div class="header-actions">
                 <button id="btnSettings" class="icon-btn" onclick="openSettings()" title="Налаштування" style="display:none;">⚙️</button>
-                <button class="icon-btn logout-btn" onclick="logout()" title="Вийти">🚪</button>
+                <button class="icon-btn logout-btn" onclick="logout()" title="Вихід">🚪</button>
             </div>
         </div>
         
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="Пошук..." onkeyup="renderChatList()">
+            <input type="text" id="searchInput" placeholder="Пошук діалогів..." onkeyup="renderChatList()">
             <span>🔍</span>
         </div>
 
@@ -369,8 +301,8 @@
     <div class="chat-header" id="chatHeader">
         <div class="header-left">
             <button class="back-btn" onclick="closeChatMobile()">⬅</button>
-            <div class="header-title-box">
-                <strong id="chatUserTitle">...</strong>
+            <div class="header-info">
+                <h3 id="chatUserTitle">Оберіть чат</h3>
                 <select id="managerSelect" class="manager-select" onchange="manualAssign(this.value)">
                     <option value="">Немає</option>
                 </select>
@@ -378,30 +310,32 @@
         </div>
 
         <div class="header-right">
-            <button id="statusBtn" class="status-btn btn-close-chat" onclick="toggleChatStatus()"></button>
-            <button onclick="archiveChat()" class="btn-icon" style="color:red;">🗑</button>
+            <button id="statusBtn" class="status-toggle status-active" onclick="toggleChatStatus()">
+                <span id="statusIcon">✓</span> 
+                <span id="statusText">Завершити</span>
+            </button>
+            <button onclick="archiveChat()" class="btn-trash" title="Видалити">🗑</button>
         </div>
     </div>
 
     <div class="messages-area" id="messagesArea">
-        <div style="display:flex; flex:1; align-items:center; justify-content:center; color:#999;">
-            Оберіть чат
+        <div style="text-align:center; margin-top:50px; color:#ccc;">
+            <div style="font-size:40px; margin-bottom:10px;">💬</div>
+            Оберіть діалог зі списку
         </div>
     </div>
 
     <div class="input-area" id="inputArea">
-        <input type="text" id="msgInput" placeholder="Повідомлення..." onkeypress="handleEnter(event)">
+        <input type="text" id="msgInput" placeholder="Напишіть відповідь..." onkeypress="handleEnter(event)">
         <button class="send-btn" onclick="sendMessage()">➤</button>
     </div>
 </div>
 
 <script>
-    // --- Config ---
     const firebaseConfig = { databaseURL: "https://latiao-chat-default-rtdb.firebaseio.com" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- State ---
     let allChats = [];
     let currentChatId = null;
     let currentChatStatus = 'open'; 
@@ -409,29 +343,18 @@
     let managers = [];
     let tgBotToken = "";
     let superAdminId = ""; 
-    
-    // Auth State
     let currentUser = null; 
-    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
+    const SESSION_TIMEOUT = 24 * 60 * 60 * 1000;
 
-    // --- Start ---
     checkSession();
 
-    // --- AUTH LOGIC ---
     function checkSession() {
         const storedUser = localStorage.getItem('lc_user');
         const loginTime = localStorage.getItem('lc_time');
-
         if (storedUser && loginTime) {
-            const now = Date.now();
-            if (now - parseInt(loginTime) > SESSION_TIMEOUT) {
-                logout(); // Session expired
-            } else {
-                currentUser = JSON.parse(storedUser);
-                initApp();
-            }
+            if (Date.now() - parseInt(loginTime) > SESSION_TIMEOUT) logout();
+            else { currentUser = JSON.parse(storedUser); initApp(); }
         } else {
-            // Show Login Screen
             document.getElementById('loginScreen').style.display = 'flex';
         }
     }
@@ -439,23 +362,19 @@
     function authenticate() {
         const login = document.getElementById('loginUser').value.trim();
         const pass = document.getElementById('loginPass').value.trim();
+        if(!login || !pass) return alert('Заповніть поля');
 
-        if(!login || !pass) return alert('Введіть логін та пароль');
-
-        // Fetch managers to verify
         db.ref('config/managers').once('value', snap => {
             const mgrs = snap.val() || [];
             let found = null;
             let role = 'manager';
 
-            // Check hardcoded root admin (Fall-back)
             if (login === 'admin' && pass === 'admin') {
                 found = { name: 'Super Admin', id: 'root' };
                 role = 'admin';
             } else {
-                // Check DB
                 found = mgrs.find(m => m.login === login && m.password === pass);
-                if (found && found.login === 'admin') role = 'admin'; 
+                if (found && found.login === 'admin') role = 'admin';
             }
 
             if (found) {
@@ -463,40 +382,30 @@
                 localStorage.setItem('lc_user', JSON.stringify(currentUser));
                 localStorage.setItem('lc_time', Date.now());
                 initApp();
-            } else {
-                alert('Невірні дані');
-            }
+            } else { alert('Помилка входу'); }
         });
     }
 
     function logout() {
-        localStorage.removeItem('lc_user');
-        localStorage.removeItem('lc_time');
-        location.reload();
+        localStorage.removeItem('lc_user'); localStorage.removeItem('lc_time'); location.reload();
     }
 
     function initApp() {
         document.getElementById('loginScreen').style.display = 'none';
-        
-        // Update UI based on Role
         document.getElementById('currentUserDisplay').innerText = currentUser.name;
         
         if (currentUser.role === 'admin') {
             document.getElementById('btnSettings').style.display = 'flex';
-            document.getElementById('currentUserDisplay').style.background = '#ffebee';
-            document.getElementById('currentUserDisplay').style.color = 'red';
-            document.getElementById('currentUserDisplay').innerText += ' (Admin)';
+            document.getElementById('currentUserDisplay').style.color = 'var(--primary)';
         } else {
             document.getElementById('btnSettings').style.display = 'none';
         }
 
-        loadSettings(); // Load config
-        // Listen to chats
+        loadSettings();
         db.ref('active_chats').on('value', snap => {
             allChats = [];
             snap.forEach(child => {
                 const chatObj = { id: child.key, ...child.val() };
-                // Instant Assign Logic
                 if (!chatObj.assignedTo && (chatObj.status !== 'closed') && managers.length > 0) {
                     assignManager(managers[0].id, chatObj.id, "auto");
                     chatObj.assignedTo = managers[0].id;
@@ -506,7 +415,6 @@
             allChats.sort((a, b) => b.ts - a.ts);
             renderChatList();
             
-            // UI Update if chat open
             if(currentChatId) {
                  const d = allChats.find(c => c.id === currentChatId);
                  if(d) {
@@ -520,11 +428,9 @@
         setInterval(checkAutoReassignment, 30000); 
     }
 
-    // --- RENDER LOGIC ---
     function renderChatList() {
         const container = document.getElementById('chatList');
         const search = document.getElementById('searchInput').value.toLowerCase();
-        
         container.innerHTML = '';
 
         const filtered = allChats.filter(chat => {
@@ -535,34 +441,42 @@
             return matchSearch; 
         });
 
-        if (filtered.length === 0) {
-            container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Порожньо</div>';
-            return;
-        }
+        if (filtered.length === 0) { container.innerHTML = '<div style="padding:40px; text-align:center; color:#ccc;">Тут порожньо</div>'; return; }
 
         filtered.forEach(chat => {
             const div = document.createElement('div');
             const time = new Date(chat.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
+            // LOGIC FOR BADGES
+            // 1. Is it closed?
+            const isClosed = chat.status === 'closed';
+            
+            // 2. Is it stale? (User msg > 5 min ago & Open)
+            const isUserLast = chat.lastMsg && !chat.lastMsg.startsWith("Ви:");
+            const timeDiff = Date.now() - chat.ts;
+            const isStale = !isClosed && isUserLast && timeDiff > 5 * 60 * 1000;
+
+            let badgesHtml = '';
+            if (chat.unread) badgesHtml += `<span class="badge badge-new">NEW</span>`;
+            if (isStale) badgesHtml += `<span class="badge badge-stale">⏳ Чекає</span>`;
+            
             let managerName = "";
             if (chat.assignedTo) {
                 const mgr = managers.find(m => m.id == chat.assignedTo);
-                if (mgr) managerName = `<span class="assigned-tag">👤 ${mgr.name}</span>`;
-            } else if ((chat.status || 'open') !== 'closed') {
-                 managerName = `<span class="assigned-tag" style="background:#fff3cd; color:#856404;">⚠️</span>`;
+                if (mgr) badgesHtml += `<span class="badge badge-manager">${mgr.name}</span>`;
+            } else if (!isClosed) {
+                 badgesHtml += `<span class="badge badge-manager" style="color:orange">Вільний</span>`;
             }
-            const isClosed = chat.status === 'closed';
 
             div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''} ${chat.unread ? 'unread' : ''} ${isClosed ? 'closed' : ''}`;
             div.onclick = () => openChat(chat.id);
             div.innerHTML = `
-                <div style="display:flex; justify-content:space-between;">
-                    <strong>${chat.id.substring(0,8)}... ${managerName}</strong>
-                    <span style="font-size:11px; color:#999;">${time}</span>
+                <div class="chat-top">
+                    <span class="chat-id">#${chat.id.substring(0,6)}</span>
+                    <span class="chat-time">${time}</span>
                 </div>
-                <div style="font-size:13px; color:#666; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; margin-top:4px;">
-                    ${chat.lastMsg || 'Вкладення...'}
-                </div>
+                <div class="chat-preview">${chat.lastMsg || 'Вкладення...'}</div>
+                <div class="badges-row">${badgesHtml}</div>
             `;
             container.appendChild(div);
         });
@@ -587,7 +501,7 @@
         const status = chatData ? (chatData.status || 'open') : 'open';
         currentChatStatus = status;
 
-        document.getElementById('chatUserTitle').innerText = 'ID: ' + chatId.substring(0,6);
+        document.getElementById('chatUserTitle').innerText = 'Клієнт #' + chatId.substring(0,6);
         updateManagerDropdown(chatData ? chatData.assignedTo : "");
         updateStatusButtonUI(status);
 
@@ -601,10 +515,7 @@
         msgsListener = db.ref('support/' + chatId);
         msgsListener.on('value', snap => {
             area.innerHTML = '';
-            snap.forEach(child => {
-                const msg = child.val();
-                renderMessage(msg, area);
-            });
+            snap.forEach(child => { renderMessage(child.val(), area); });
             area.scrollTop = area.scrollHeight;
         });
     }
@@ -620,10 +531,21 @@
         container.appendChild(div);
     }
 
+    // IMPROVED BUTTON UI LOGIC
     function updateStatusButtonUI(status) {
         const btn = document.getElementById('statusBtn');
-        if (status === 'closed') btn.className = 'status-btn btn-open-chat';
-        else btn.className = 'status-btn btn-close-chat';
+        const icon = document.getElementById('statusIcon');
+        const text = document.getElementById('statusText');
+        
+        if (status === 'closed') {
+            btn.className = 'status-toggle status-closed';
+            icon.innerText = '↺';
+            text.innerText = 'Відновити';
+        } else {
+            btn.className = 'status-toggle status-active';
+            icon.innerText = '✓';
+            text.innerText = 'Завершити';
+        }
     }
 
     function toggleChatStatus() {
@@ -639,9 +561,7 @@
         select.innerHTML = '<option value="">Немає</option>';
         managers.forEach(mgr => {
             const opt = document.createElement('option');
-            opt.value = mgr.id;
-            opt.innerText = mgr.name;
-            select.appendChild(opt);
+            opt.value = mgr.id; opt.innerText = mgr.name; select.appendChild(opt);
         });
         select.value = assignedId || "";
     }
@@ -651,11 +571,9 @@
     function assignManager(managerId, chatId, reason = "manual") {
         if(!chatId) return;
         db.ref('active_chats/' + chatId).update({ assignedTo: managerId });
-        
         if (tgBotToken) {
             const mgr = managers.find(m => m.id == managerId);
             const managerName = mgr ? mgr.name : "Невідомий";
-            
             if (managerId && mgr) {
                 let text = "";
                 if (reason === "manual") text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\nID: \`${chatId}\``;
@@ -663,7 +581,6 @@
                 else if (reason === "auto") text = `⚡ *НОВИЙ ЧАТ*\nID: \`${chatId}\``;
                 sendTelegram(managerId, text);
             }
-
             if (superAdminId && superAdminId !== managerId) {
                 let adminText = `👮‍♂️ *LOG* | ${managerName} | ${reason}\nID: \`${chatId}\``;
                 sendTelegram(superAdminId, adminText);
@@ -682,7 +599,6 @@
         if (managers.length === 0) return; 
         const NOW = Date.now();
         const TIMEOUT = 5 * 60 * 1000; 
-
         allChats.forEach(chat => {
             if (chat.unread === true && chat.status !== 'closed') {
                 const timeDiff = NOW - chat.ts;
@@ -691,7 +607,6 @@
                         const currentIndex = managers.findIndex(m => m.id == chat.assignedTo);
                         let nextIndex = currentIndex + 1;
                         if (nextIndex >= managers.length) nextIndex = 0; 
-                        
                         if (managers.length > 1 || (managers.length === 1 && currentIndex === -1)) {
                              const nextManagerId = managers[nextIndex].id;
                              if (nextManagerId !== chat.assignedTo) {
@@ -710,7 +625,6 @@
         const input = document.getElementById('msgInput');
         const text = input.value.trim();
         if (!text || !currentChatId) return;
-
         const ts = Date.now();
         db.ref('support/' + currentChatId).push({ text, type: 'admin', ts });
         db.ref('active_chats/' + currentChatId).update({ lastMsg: 'Ви: ' + text, ts, unread: false, status: 'open' });
@@ -728,10 +642,9 @@
 
     // --- Settings & Stats ---
     function openSettings() {
-        if(currentUser.role !== 'admin') return; // Security check
+        if(currentUser.role !== 'admin') return; 
         document.getElementById('settingsModal').style.display = 'flex';
-        renderManagersInputs();
-        switchTab('settings');
+        renderManagersInputs(); switchTab('settings');
     }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
@@ -769,7 +682,7 @@
             const m = mgrStats[id];
             const div = document.createElement('div');
             div.className = 'stat-item';
-            div.innerHTML = `<span class="stat-name">${m.name}</span><div class="stat-bar"><span class="val-active">⚡ ${m.active}</span><span class="val-done">✓ ${m.closed}</span></div>`;
+            div.innerHTML = `<span class="stat-name">${m.name}</span><div class="stat-bar"><span class="val-active">⚡ ${m.active}</span><span class="val-done" style="margin-left:8px;">✓ ${m.closed}</span></div>`;
             list.appendChild(div);
         });
     }
@@ -791,9 +704,7 @@
             <input type="text" placeholder="TG ID" class="mgr-id" value="${id}">
             <input type="text" placeholder="Логін" class="mgr-login" value="${login}">
             <input type="text" placeholder="Пароль" class="mgr-pass" value="${pass}">
-            <div style="grid-column: span 2; text-align:right;">
-                <button onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none;">Видалити</button>
-            </div>
+            <button onclick="this.parentElement.remove()" style="grid-column: span 2; color:red; border:none; background:none; text-align:right;">Видалити</button>
         `;
         document.getElementById('managersList').appendChild(div);
     }
@@ -815,13 +726,9 @@
         db.ref('config/tg_token').set(token);
         db.ref('config/admin_id').set(adminId);
         
-        managers = newManagers;
-        tgBotToken = token;
-        superAdminId = adminId;
-        
+        managers = newManagers; tgBotToken = token; superAdminId = adminId;
         if(currentChatId) openChat(currentChatId);
-        closeSettings();
-        alert('Збережено!');
+        closeSettings(); alert('Збережено!');
     }
 
     function loadSettings() {
