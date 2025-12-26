@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latiao Admin Panel</title>
+    <title>Latiao Admin Pro</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -12,10 +12,8 @@
             --primary: #e62117; 
             --bg: #f4f7f6;
             --sidebar-bg: #fff;
-            --chat-bg: #fff;
-            --msg-in: #fff;
-            --msg-out: #e62117;
-            --text-main: #333;
+            --border: #e1e4e8;
+            --active-item: #fff5f5;
         }
 
         body {
@@ -27,67 +25,116 @@
             overflow: hidden;
         }
 
-        /* --- Sidebar (Chat List) --- */
+        /* --- Sidebar --- */
         .sidebar {
-            width: 300px;
+            width: 320px;
             background: var(--sidebar-bg);
-            border-right: 1px solid #ddd;
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
         }
 
         .sidebar-header {
-            padding: 20px;
-            background: #fff;
-            border-bottom: 1px solid #eee;
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .sidebar-header h2 { margin: 0; font-size: 18px; color: var(--text-main); }
-        
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 8px 30px 8px 10px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f9f9f9;
+        }
+        .search-box span {
+            position: absolute;
+            right: 10px;
+            top: 8px;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+        }
+        .filter-btn {
+            background: none;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #666;
+            border-radius: 15px;
+            font-weight: 500;
+        }
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
         .chat-list {
             flex: 1;
             overflow-y: auto;
-            padding: 10px;
         }
 
         .chat-item {
             padding: 15px;
-            margin-bottom: 8px;
-            background: #fff;
-            border-radius: 12px;
+            border-bottom: 1px solid #f0f0f0;
             cursor: pointer;
             transition: 0.2s;
-            border: 1px solid transparent;
             position: relative;
         }
+        .chat-item:hover { background: #f9f9f9; }
+        .chat-item.active { background: var(--active-item); border-left: 3px solid var(--primary); }
+        .chat-item.unread { font-weight: bold; background: #fffcfc; }
+        .chat-item.unread::after {
+            content: '';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+        }
 
-        .chat-item:hover { background: #f9f9f9; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .chat-item.active { border-color: var(--primary); background: #fff5f5; }
-        
-        .chat-item strong { display: block; font-size: 14px; margin-bottom: 4px; }
-        .chat-item p { margin: 0; font-size: 12px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .chat-time { position: absolute; top: 15px; right: 15px; font-size: 10px; color: #999; }
+        .settings-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+        }
 
-        /* --- Main Chat Area --- */
+        /* --- Main Area --- */
         .main {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: #fff;
         }
-
         .chat-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
+            height: 60px;
+            border-bottom: 1px solid var(--border);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            background: #fff;
-            height: 50px;
+            justify-content: space-between;
+            padding: 0 20px;
         }
-
-        .chat-header h3 { margin: 0; font-size: 16px; }
-
         .messages-area {
             flex: 1;
             padding: 20px;
@@ -97,260 +144,338 @@
             flex-direction: column;
             gap: 10px;
         }
-
         .msg {
             max-width: 60%;
             padding: 10px 14px;
             border-radius: 14px;
             font-size: 14px;
-            line-height: 1.4;
             position: relative;
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-
-        .msg.user {
-            align-self: flex-start;
-            background: var(--msg-in);
-            border: 1px solid #e0e0e0;
-            border-bottom-left-radius: 2px;
-            color: #333;
-        }
-
-        .msg.admin {
-            align-self: flex-end;
-            background: var(--msg-out);
-            color: white;
-            border-bottom-right-radius: 2px;
-        }
-
-        .msg-time {
-            font-size: 9px;
-            opacity: 0.7;
-            text-align: right;
-            margin-top: 4px;
-        }
-
-        /* --- Input Area --- */
+        .msg.user { align-self: flex-start; background: #fff; border: 1px solid #ddd; border-bottom-left-radius: 2px; }
+        .msg.admin { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 2px; }
+        
         .input-area {
-            padding: 20px;
-            background: #fff;
-            border-top: 1px solid #eee;
+            padding: 15px;
+            border-top: 1px solid var(--border);
             display: flex;
             gap: 10px;
         }
+        .input-area input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 20px; outline: none; }
+        .send-btn { background: var(--primary); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; }
 
-        input {
-            flex: 1;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 25px;
-            outline: none;
-            transition: 0.3s;
+        /* --- Modal Settings --- */
+        .modal {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center; justify-content: center;
         }
-        input:focus { border-color: var(--primary); }
-
-        button.send-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: 0.2s;
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
-        button.send-btn:hover { transform: scale(1.05); }
-
-        /* --- Empty State --- */
-        .empty-state {
-            display: flex;
-            flex: 1;
-            align-items: center;
-            justify-content: center;
-            color: #999;
-            flex-direction: column;
-        }
-        
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal h3 { margin-top: 0; }
+        .manager-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        .manager-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn-sm { padding: 5px 10px; cursor: pointer; background: #ddd; border: none; border-radius: 4px; }
+        .btn-save { background: var(--primary); color: white; width: 100%; padding: 10px; margin-top: 15px; border: none; border-radius: 6px; cursor: pointer; }
 
     </style>
 </head>
 <body>
 
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h2>Вхідні повідомлення</h2>
-        </div>
-        <div class="chat-list" id="chatList">
-            <div style="text-align:center; padding:20px; color:#999;">Завантаження...</div>
-        </div>
-    </div>
-
-    <div class="main">
-        <div class="chat-header" id="chatHeader" style="display:none;">
-            <h3 id="currentChatUser">Користувач</h3>
-            <button onclick="archiveChat()" style="background:none; border:1px solid #ddd; padding:5px 10px; border-radius:8px; cursor:pointer;">Архівувати</button>
-        </div>
-
-        <div id="messagesArea" class="messages-area">
-            <div class="empty-state">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1.5">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <p>Оберіть чат зліва</p>
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <h3>Налаштування менеджерів</h3>
+        <p style="font-size:12px; color:#666;">Додайте Telegram Chat ID менеджерів для сповіщень.</p>
+        
+        <div id="managersList">
             </div>
+        
+        <button class="btn-sm" onclick="addManagerField()" style="margin-top:10px;">+ Додати менеджера</button>
+
+        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+        
+        <label style="font-size:12px; font-weight:bold;">Telegram Bot Token (для розсилки):</label>
+        <input type="text" id="tgTokenInput" placeholder="123456:ABC-DEF..." style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box; border:1px solid #ddd; border-radius:4px;">
+
+        <button class="btn-save" onclick="saveSettings()">Зберегти</button>
+        <button class="btn-sm" onclick="closeSettings()" style="width:100%; margin-top:5px; background:white;">Закрити</button>
+    </div>
+</div>
+
+<div class="sidebar">
+    <div class="sidebar-header">
+        <div class="top-row">
+            <h2 style="margin:0; font-size:18px;">Latiao Admin</h2>
+            <button class="settings-btn" onclick="openSettings()">⚙️</button>
+        </div>
+        
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Пошук (ID або текст)..." onkeyup="renderChatList()">
+            <span>🔍</span>
         </div>
 
-        <div class="input-area" id="inputArea" style="display:none;">
-            <input type="text" id="adminInput" placeholder="Відповісти клієнту..." onkeypress="handleEnter(event)">
-            <button class="send-btn" onclick="sendAdminMessage()">➤</button>
+        <div class="filters">
+            <button class="filter-btn active" id="btnAll" onclick="setFilter('all')">Всі</button>
+            <button class="filter-btn" id="btnUnread" onclick="setFilter('unread')">Непрочитані</button>
         </div>
     </div>
+    
+    <div class="chat-list" id="chatList">
+        </div>
+</div>
+
+<div class="main">
+    <div class="chat-header" id="chatHeader" style="display:none;">
+        <div>
+            <strong id="chatUserTitle">...</strong>
+            <div style="font-size:12px; color:#666;" id="chatUserStatus">Офлайн</div>
+        </div>
+        <button onclick="archiveChat()" class="btn-sm">Видалити</button>
+    </div>
+
+    <div class="messages-area" id="messagesArea">
+        <div style="display:flex; flex:1; align-items:center; justify-content:center; color:#999;">
+            Оберіть чат для початку роботи
+        </div>
+    </div>
+
+    <div class="input-area" id="inputArea" style="display:none;">
+        <input type="text" id="msgInput" placeholder="Напишіть повідомлення..." onkeypress="handleEnter(event)">
+        <button class="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+</div>
 
 <script>
-    // 1. КОНФІГУРАЦІЯ (ТА Ж САМА, ЩО І У ВІДЖЕТІ)
+    // --- Config ---
     const firebaseConfig = { databaseURL: "https://latiao-chat-default-rtdb.firebaseio.com" };
-    
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // --- State ---
+    let allChats = [];
     let currentChatId = null;
-    let messagesRef = null;
+    let filterType = 'all'; // 'all' or 'unread'
+    let managers = [];
+    let tgBotToken = "";
 
-    // 2. ЗАВАНТАЖЕННЯ СПИСКУ ЧАТІВ
-    // Ми слухаємо гілку "active_chats", куди віджет пише останнє повідомлення
-    const chatListEl = document.getElementById('chatList');
+    // --- Init ---
+    loadSettings();
     
-    db.ref('active_chats').on('value', snapshot => {
-        chatListEl.innerHTML = '';
-        const chats = [];
+    // --- Data Listeners ---
+    db.ref('active_chats').on('value', snap => {
+        allChats = [];
+        snap.forEach(child => {
+            allChats.push({ id: child.key, ...child.val() });
+        });
+        // Сортуємо: нові зверху
+        allChats.sort((a, b) => b.ts - a.ts);
+        renderChatList();
+    });
+
+    // --- Rendering ---
+    function renderChatList() {
+        const container = document.getElementById('chatList');
+        const search = document.getElementById('searchInput').value.toLowerCase();
         
-        snapshot.forEach(child => {
-            chats.push({ id: child.key, ...child.val() });
+        container.innerHTML = '';
+
+        const filtered = allChats.filter(chat => {
+            // Фільтр пошуку
+            const matchSearch = chat.id.toLowerCase().includes(search) || (chat.lastMsg && chat.lastMsg.toLowerCase().includes(search));
+            
+            // Фільтр вкладок
+            if (filterType === 'unread') {
+                return matchSearch && chat.unread === true;
+            }
+            return matchSearch;
         });
 
-        // Сортуємо: найновіші зверху
-        chats.sort((a, b) => b.ts - a.ts);
-
-        if (chats.length === 0) {
-            chatListEl.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Поки немає чатів</div>';
+        if (filtered.length === 0) {
+            container.innerHTML = '<div style="padding:20px; text-align:center; color:#999;">Нічого не знайдено</div>';
             return;
         }
 
-        chats.forEach(chat => {
-            const time = new Date(chat.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        filtered.forEach(chat => {
             const div = document.createElement('div');
-            div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''}`;
-            // Додаємо статус (якщо є) або просто показуємо останнє повідомлення
+            const time = new Date(chat.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            div.className = `chat-item ${currentChatId === chat.id ? 'active' : ''} ${chat.unread ? 'unread' : ''}`;
+            div.onclick = () => openChat(chat.id);
             div.innerHTML = `
-                <strong>ID: ${chat.id.substring(0, 8)}...</strong>
-                <p>${chat.lastMsg || 'Зображення/Файл'}</p>
-                <span class="chat-time">${time}</span>
+                <div style="display:flex; justify-content:space-between;">
+                    <strong>${chat.id.substring(0,8)}...</strong>
+                    <span style="font-size:11px; color:#999;">${time}</span>
+                </div>
+                <div style="font-size:12px; color:#666; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; margin-top:2px;">
+                    ${chat.lastMsg || 'Вкладення...'}
+                </div>
             `;
-            div.onclick = () => loadChat(chat.id);
-            chatListEl.appendChild(div);
+            container.appendChild(div);
         });
-    });
+    }
 
-    // 3. ВІДКРИТТЯ КОНКРЕТНОГО ЧАТУ
-    function loadChat(userId) {
-        currentChatId = userId;
-        
-        // Оновлюємо UI списку (підсвітка активного)
-        document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
-        // (Тут можна додати логіку пошуку елемента в DOM і додавання класу, але перерендер списку це зробить сам при оновленні)
-        
-        // Показуємо інтерфейс
+    function setFilter(type) {
+        filterType = type;
+        document.getElementById('btnAll').className = type === 'all' ? 'filter-btn active' : 'filter-btn';
+        document.getElementById('btnUnread').className = type === 'unread' ? 'filter-btn active' : 'filter-btn';
+        renderChatList();
+    }
+
+    // --- Chat Logic ---
+    let msgsListener = null;
+
+    function openChat(chatId) {
+        currentChatId = chatId;
+        renderChatList(); // Update active highlight
+
+        // Mark as read
+        db.ref('active_chats/' + chatId).update({ unread: false });
+
         document.getElementById('chatHeader').style.display = 'flex';
         document.getElementById('inputArea').style.display = 'flex';
-        document.getElementById('currentChatUser').innerText = `Клієнт: ${userId}`;
+        document.getElementById('chatUserTitle').innerText = 'Клієнт: ' + chatId;
         
-        const msgArea = document.getElementById('messagesArea');
-        msgArea.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">Завантаження історії...</div>';
+        const area = document.getElementById('messagesArea');
+        area.innerHTML = '<div style="text-align:center; padding:20px;">Завантаження...</div>';
 
-        // Відписуємось від попереднього чату, якщо був
-        if (messagesRef) messagesRef.off();
+        if (msgsListener) msgsListener.off();
 
-        // Слухаємо повідомлення конкретного юзера
-        messagesRef = db.ref('support/' + userId);
-        messagesRef.on('value', snapshot => {
-            msgArea.innerHTML = '';
-            
-            if (!snapshot.exists()) {
-                msgArea.innerHTML = '<div style="text-align:center; color:#999; margin-top:20px;">Історія порожня</div>';
-                return;
-            }
-
-            snapshot.forEach(child => {
+        msgsListener = db.ref('support/' + chatId);
+        msgsListener.on('value', snap => {
+            area.innerHTML = '';
+            snap.forEach(child => {
                 const msg = child.val();
-                renderMessage(msg);
+                const div = document.createElement('div');
+                div.className = `msg ${msg.type === 'admin' ? 'admin' : 'user'}`;
+                div.innerText = msg.text;
+                area.appendChild(div);
             });
-            
-            // Автопрокрутка вниз
-            msgArea.scrollTop = msgArea.scrollHeight;
+            area.scrollTop = area.scrollHeight;
         });
     }
 
-    function renderMessage(msg) {
-        const area = document.getElementById('messagesArea');
-        const div = document.createElement('div');
-        // 'user' - це повідомлення ВІД клієнта (зліва)
-        // 'admin' - це повідомлення ВІД нас (справа)
-        const typeClass = msg.type === 'admin' ? 'admin' : 'user';
-        
-        const time = new Date(msg.ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        
-        div.className = `msg ${typeClass}`;
-        div.innerHTML = `
-            ${msg.text}
-            <div class="msg-time">${time}</div>
-        `;
-        area.appendChild(div);
-    }
-
-    // 4. ВІДПРАВКА ПОВІДОМЛЕННЯ (АДМІН)
-    function sendAdminMessage() {
-        const input = document.getElementById('adminInput');
+    function sendMessage() {
+        const input = document.getElementById('msgInput');
         const text = input.value.trim();
-        
         if (!text || !currentChatId) return;
 
         const ts = Date.now();
-        
-        // 1. Додаємо повідомлення в гілку переписки
-        db.ref('support/' + currentChatId).push({
-            text: text,
-            type: 'admin', // ВАЖЛИВО: тип admin, щоб віджет клієнта розпізнав це
-            ts: ts
-        });
-
-        // 2. Оновлюємо статус в списку чатів (щоб було видно, що ми відповіли)
-        db.ref('active_chats/' + currentChatId).update({
-            lastMsg: 'Ви: ' + text,
-            ts: ts
-        });
+        // Send to history
+        db.ref('support/' + currentChatId).push({ text, type: 'admin', ts });
+        // Update list preview
+        db.ref('active_chats/' + currentChatId).update({ lastMsg: 'Ви: ' + text, ts, unread: false });
 
         input.value = '';
-        input.focus();
     }
 
     function handleEnter(e) {
-        if (e.key === 'Enter') sendAdminMessage();
+        if (e.key === 'Enter') sendMessage();
     }
 
     function archiveChat() {
-        if(!currentChatId) return;
-        if(confirm('Видалити цей чат зі списку активних? (Історія збережеться в базі)')) {
-            // Видаляємо тільки зі списку active_chats, але історія в support/ лишається
+        if (!currentChatId) return;
+        if(confirm('Видалити чат зі списку?')) {
             db.ref('active_chats/' + currentChatId).remove();
-            
-            // Очищуємо екран
-            document.getElementById('messagesArea').innerHTML = '<div class="empty-state"><p>Чат архівовано</p></div>';
-            document.getElementById('inputArea').style.display = 'none';
-            document.getElementById('chatHeader').style.display = 'none';
-            currentChatId = null;
+            location.reload();
         }
     }
+
+    // --- Settings & Managers Logic ---
+    function openSettings() {
+        document.getElementById('settingsModal').style.display = 'flex';
+        renderManagersInputs();
+    }
+
+    function closeSettings() {
+        document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    function renderManagersInputs() {
+        const list = document.getElementById('managersList');
+        list.innerHTML = '';
+        document.getElementById('tgTokenInput').value = tgBotToken;
+
+        managers.forEach((mgr, index) => {
+            addManagerField(mgr.name, mgr.id);
+        });
+        if (managers.length === 0) addManagerField();
+    }
+
+    function addManagerField(name = '', id = '') {
+        const div = document.createElement('div');
+        div.className = 'manager-row';
+        div.innerHTML = `
+            <input type="text" placeholder="Ім'я" class="mgr-name" value="${name}" style="width:30%">
+            <input type="text" placeholder="Telegram Chat ID" class="mgr-id" value="${id}" style="flex:1">
+            <button onclick="this.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">✕</button>
+        `;
+        document.getElementById('managersList').appendChild(div);
+    }
+
+    function saveSettings() {
+        const rows = document.querySelectorAll('.manager-row');
+        const newManagers = [];
+        rows.forEach(row => {
+            const name = row.querySelector('.mgr-name').value.trim();
+            const id = row.querySelector('.mgr-id').value.trim();
+            if (name && id) newManagers.push({ name, id });
+        });
+        
+        const token = document.getElementById('tgTokenInput').value.trim();
+
+        // Save to Firebase (so all admins share settings)
+        db.ref('config/managers').set(newManagers);
+        db.ref('config/tg_token').set(token);
+        
+        managers = newManagers;
+        tgBotToken = token;
+        closeSettings();
+        alert('Налаштування збережено!');
+    }
+
+    function loadSettings() {
+        db.ref('config').once('value', snap => {
+            const cfg = snap.val() || {};
+            managers = cfg.managers || [];
+            tgBotToken = cfg.tg_token || "";
+        });
+    }
+
+    // --- Notification Helper (Optional) ---
+    // Це можна використовувати, якщо ви хочете, щоб АДМІНКА надсилала сповіщення в ТГ, 
+    // коли пише КЛІЄНТ (але для цього треба Cloud Functions, або простий хак нижче)
+    
+    // Приклад: прослуховування нових повідомлень від юзерів для нотифікації менеджерів
+    // Увага: У браузерній версії це працюватиме, тільки якщо вкладка Адмінки відкрита
+    db.ref('active_chats').on('child_changed', snap => {
+        const chat = snap.val();
+        if (chat.unread === true && tgBotToken && managers.length > 0) {
+            // Check restriction (timestamp) to avoid spam on reload
+            if (chat.ts > Date.now() - 2000) { 
+                sendTelegramAlert(chat.id, chat.lastMsg);
+            }
+        }
+    });
+
+    function sendTelegramAlert(userId, text) {
+        managers.forEach(mgr => {
+            fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    chat_id: mgr.id,
+                    text: `🔥 Нове повідомлення від ${userId}:\n"${text}"\n\nПризначено для: ${mgr.name}`
+                })
+            });
+        });
+    }
+
 </script>
 
 </body>
