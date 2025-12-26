@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Latiao Admin: Auto-Assign</title>
+    <title>Latiao Admin: Super-Admin Log</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -244,24 +244,27 @@
         .manager-row input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
         .btn-sm { padding: 5px 10px; cursor: pointer; background: #ddd; border: none; border-radius: 4px; }
         .btn-save { background: var(--primary); color: white; width: 100%; padding: 10px; margin-top: 15px; border: none; border-radius: 6px; cursor: pointer; }
-
+        .lbl { font-size:12px; font-weight:bold; display:block; margin-top:10px; margin-bottom:4px;}
     </style>
 </head>
 <body>
 
 <div id="settingsModal" class="modal">
     <div class="modal-content">
-        <h3>Налаштування менеджерів</h3>
-        <p style="font-size:12px; color:#666;">Додайте Telegram Chat ID менеджерів.</p>
+        <h3>Налаштування</h3>
         
+        <label class="lbl">Менеджери:</label>
         <div id="managersList"></div>
-        
-        <button class="btn-sm" onclick="addManagerField()" style="margin-top:10px;">+ Додати менеджера</button>
+        <button class="btn-sm" onclick="addManagerField()">+ Додати</button>
 
         <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
         
-        <label style="font-size:12px; font-weight:bold;">Telegram Bot Token:</label>
-        <input type="text" id="tgTokenInput" placeholder="123456:ABC-DEF..." style="width:100%; padding:8px; margin-top:5px; box-sizing:border-box; border:1px solid #ddd; border-radius:4px;">
+        <label class="lbl">Telegram Bot Token:</label>
+        <input type="text" id="tgTokenInput" placeholder="123456:ABC-DEF..." style="width:100%; padding:8px; box-sizing:border-box; border:1px solid #ddd; border-radius:4px;">
+        
+        <label class="lbl">Admin ID (для логів):</label>
+        <input type="text" id="adminIdInput" placeholder="Твій Telegram ID" style="width:100%; padding:8px; box-sizing:border-box; border:1px solid #ddd; border-radius:4px;">
+        <small style="color:#999; font-size:10px;">Введи сюди свій ID, щоб отримувати копії сповіщень про призначення.</small>
 
         <button class="btn-save" onclick="saveSettings()">Зберегти</button>
         <button class="btn-sm" onclick="closeSettings()" style="width:100%; margin-top:5px; background:white;">Закрити</button>
@@ -334,10 +337,11 @@
     let filterType = 'open'; 
     let managers = [];
     let tgBotToken = "";
+    let superAdminId = ""; // Твій ID для логів
 
     // --- Init ---
     loadSettings();
-    setInterval(checkAutoReassignment, 30000); // Check every 30s for timeouts
+    setInterval(checkAutoReassignment, 30000); 
 
     // --- Data Listeners ---
     db.ref('active_chats').on('value', snap => {
@@ -345,13 +349,10 @@
         snap.forEach(child => {
             const chatObj = { id: child.key, ...child.val() };
             
-            // ==========================================
-            // МИТТЄВЕ ПРИЗНАЧЕННЯ (Instant Assign Logic)
-            // ==========================================
+            // Instant Assign if new and empty
             if (!chatObj.assignedTo && (chatObj.status !== 'closed') && managers.length > 0) {
-                // Якщо чат новий, відкритий і нічий -> призначаємо Першого менеджера
                 assignManager(managers[0].id, chatObj.id, "auto");
-                chatObj.assignedTo = managers[0].id; // Оновлюємо локально для рендеру
+                chatObj.assignedTo = managers[0].id;
             }
 
             allChats.push(chatObj);
@@ -360,7 +361,6 @@
         allChats.sort((a, b) => b.ts - a.ts);
         renderChatList();
         
-        // Refresh Current Chat UI if open
         if(currentChatId) {
              const currentChatData = allChats.find(c => c.id === currentChatId);
              if(currentChatData) {
@@ -384,7 +384,7 @@
 
             if (filterType === 'open') return matchSearch && status !== 'closed';
             if (filterType === 'closed') return matchSearch && status === 'closed';
-            return matchSearch; // 'all'
+            return matchSearch; 
         });
 
         if (filtered.length === 0) {
@@ -497,10 +497,7 @@
     function toggleChatStatus() {
         if(!currentChatId) return;
         const newStatus = currentChatStatus === 'open' ? 'closed' : 'open';
-        
         db.ref('active_chats/' + currentChatId).update({ status: newStatus });
-        
-        // UI auto-update via listener, but visual feedback is instant
         currentChatStatus = newStatus;
         updateStatusButtonUI(newStatus);
     }
@@ -525,51 +522,61 @@
     function assignManager(managerId, chatId, reason = "manual") {
         if(!chatId) return;
         db.ref('active_chats/' + chatId).update({ assignedTo: managerId });
-        if (managerId && tgBotToken) {
+        
+        if (tgBotToken) {
             const mgr = managers.find(m => m.id == managerId);
-            if (mgr) {
+            const managerName = mgr ? mgr.name : "Невідомий";
+            
+            // 1. Сповіщення призначеному менеджеру
+            if (managerId && mgr) {
                 let text = "";
-                if (reason === "manual") text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\n\nКлієнт ID: \`${chatId}\`\nМенеджер: ${mgr.name}`;
-                else if (reason === "timeout") text = `🚨 *ПЕРЕДАЧА ЧАТУ (Таймаут)*\n\nКлієнт: \`${chatId}\`\nПопередній менеджер не відповів.\nТепер відповідаєте ви: ${mgr.name}`;
+                if (reason === "manual") text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\n\nКлієнт ID: \`${chatId}\``;
+                else if (reason === "timeout") text = `🚨 *ПЕРЕДАЧА ЧАТУ*\n\nКлієнт: \`${chatId}\`\nПопередній менеджер не відповів.`;
                 else if (reason === "auto") text = `⚡ *НОВИЙ ЧАТ*\n\nКлієнт: \`${chatId}\`\nПризначено вам автоматично.`;
 
-                fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ chat_id: managerId, text: text, parse_mode: 'Markdown' })
-                }).catch(console.error);
+                sendTelegram(managerId, text);
+            }
+
+            // 2. Сповіщення Супер-Адміну (Лог)
+            // Надсилаємо, якщо Адмін заданий І Адмін це не той самий менеджер, якому призначили (щоб не дублювати)
+            if (superAdminId && superAdminId !== managerId) {
+                let adminText = `👮‍♂️ *ADMIN LOG*\n\nЧат: \`${chatId}\`\nКому призначено: *${managerName}*\nПричина: ${reason}`;
+                sendTelegram(superAdminId, adminText);
             }
         }
     }
+    
+    function sendTelegram(chatId, text) {
+        fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' })
+        }).catch(console.error);
+    }
 
-    // --- AUTO PILOT LOGIC (Updated for 5min timeout) ---
+    // --- AUTO PILOT LOGIC ---
     function checkAutoReassignment() {
         if (managers.length === 0) return; 
 
         const NOW = Date.now();
-        const TIMEOUT = 5 * 60 * 1000; // 5 хвилин
+        const TIMEOUT = 5 * 60 * 1000; 
 
         allChats.forEach(chat => {
-            // Перевіряємо тільки відкриті і непрочитані чати
             if (chat.unread === true && chat.status !== 'closed') {
                 const timeDiff = NOW - chat.ts;
                 if (timeDiff > TIMEOUT) {
-                    // Якщо менеджер вже є, але мовчить -> міняємо на наступного
                     if (chat.assignedTo) {
                         const currentIndex = managers.findIndex(m => m.id == chat.assignedTo);
                         let nextIndex = currentIndex + 1;
-                        if (nextIndex >= managers.length) nextIndex = 0; // По колу
+                        if (nextIndex >= managers.length) nextIndex = 0; 
                         
-                        // Якщо є на кого міняти
                         if (managers.length > 1 || (managers.length === 1 && currentIndex === -1)) {
                              const nextManagerId = managers[nextIndex].id;
-                             // Уникаємо спаму тим самим, якщо він один
                              if (nextManagerId !== chat.assignedTo) {
                                  assignManager(nextManagerId, chat.id, "timeout");
                              }
                         }
                     } else {
-                        // Якщо раптом "вільний" провисів 5 хв (хоча ми призначаємо миттєво) - про всяк випадок
                         assignManager(managers[0].id, chat.id, "auto");
                     }
                 }
@@ -585,7 +592,6 @@
         const ts = Date.now();
         db.ref('support/' + currentChatId).push({ text, type: 'admin', ts });
         
-        // Auto re-open if closed
         db.ref('active_chats/' + currentChatId).update({ 
             lastMsg: 'Ви: ' + text, 
             ts, 
@@ -622,6 +628,8 @@
         const list = document.getElementById('managersList');
         list.innerHTML = '';
         document.getElementById('tgTokenInput').value = tgBotToken;
+        document.getElementById('adminIdInput').value = superAdminId; // Load Admin ID
+
         managers.forEach((mgr) => addManagerField(mgr.name, mgr.id));
         if (managers.length === 0) addManagerField();
     }
@@ -646,10 +654,16 @@
             if (name && id) newManagers.push({ name, id });
         });
         const token = document.getElementById('tgTokenInput').value.trim();
+        const adminId = document.getElementById('adminIdInput').value.trim();
+
         db.ref('config/managers').set(newManagers);
         db.ref('config/tg_token').set(token);
+        db.ref('config/admin_id').set(adminId); // Save Admin ID
+        
         managers = newManagers;
         tgBotToken = token;
+        superAdminId = adminId;
+        
         if(currentChatId) openChat(currentChatId);
         closeSettings();
         alert('Налаштування збережено!');
@@ -660,6 +674,7 @@
             const cfg = snap.val() || {};
             managers = cfg.managers || [];
             tgBotToken = cfg.tg_token || "";
+            superAdminId = cfg.admin_id || "";
         });
     }
 
