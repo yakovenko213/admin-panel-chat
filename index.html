@@ -3,66 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM v14.0 (Shake Analytics)</title>
+    <title>Latiao CRM v14.0 (Prizes)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
         :root {
-            --primary: #e62117; 
-            --green: #2ecc71;
-            --orange: #f39c12;
-            --red: #e74c3c;
-            --purple: #9b59b6;
-            --blue: #3498db;
-            --teal: #1abc9c;
-
-            /* THEME VARIABLES */
-            --bg: #f4f7f6;
-            --sidebar-bg: #fff;
-            --card-bg: #fff;
-            --border: #e1e4e8;
-            --active-item: #fff5f5;
-            --text-main: #2c3e50;
-            --text-sec: #95a5a6;
-            --input-bg: #f9f9f9;
-            --input-border: #eee;
-            --msg-user-bg: #fff;
-            --msg-user-text: #2c3e50;
-            --hover-btn: #f0f2f5;
-            --shadow: rgba(0,0,0,0.08);
-            --modal-overlay: rgba(0,0,0,0.5);
+            --primary: #e62117; --green: #2ecc71; --orange: #f39c12; --red: #e74c3c;
+            --purple: #9b59b6; --blue: #3498db; --bg: #f4f7f6; --sidebar-bg: #fff;
+            --card-bg: #fff; --border: #e1e4e8; --active-item: #fff5f5; --text-main: #2c3e50;
+            --text-sec: #95a5a6; --input-bg: #f9f9f9; --input-border: #eee;
+            --msg-user-bg: #fff; --msg-user-text: #2c3e50; --hover-btn: #f0f2f5;
+            --shadow: rgba(0,0,0,0.08); --modal-overlay: rgba(0,0,0,0.5);
         }
 
         [data-theme="dark"] {
-            --bg: #121212;
-            --sidebar-bg: #1e1e1e;
-            --card-bg: #1e1e1e;
-            --border: #333;
-            --active-item: #2c1b1b;
-            --text-main: #e0e0e0;
-            --text-sec: #a0a0a0;
-            --input-bg: #2d2d2d;
-            --input-border: #444;
-            --msg-user-bg: #2d2d2d;
-            --msg-user-text: #e0e0e0;
-            --hover-btn: #333;
-            --shadow: rgba(0,0,0,0.5);
+            --bg: #121212; --sidebar-bg: #1e1e1e; --card-bg: #1e1e1e; --border: #333;
+            --active-item: #2c1b1b; --text-main: #e0e0e0; --text-sec: #a0a0a0;
+            --input-bg: #2d2d2d; --input-border: #444; --msg-user-bg: #2d2d2d;
+            --msg-user-text: #e0e0e0; --hover-btn: #333; --shadow: rgba(0,0,0,0.5);
             --modal-overlay: rgba(0,0,0,0.7);
         }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg); color: var(--text-main);
-            margin: 0; height: 100vh; height: 100dvh; overflow: hidden;
-            transition: background 0.3s;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text-main); margin: 0; height: 100vh; height: 100dvh; overflow: hidden; transition: background 0.3s; }
 
-        /* --- APP CONTAINERS --- */
+        /* APP SWITCHING */
         #app-chat, #app-shake { display: none; width: 100%; height: 100%; }
         #app-chat.active, #app-shake.active { display: flex; }
 
-        /* --- LOGIN SCREEN --- */
+        /* LOGIN */
         #loginScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .login-box { background: var(--card-bg); padding: 40px; border-radius: 24px; box-shadow: 0 20px 40px var(--shadow); width: 320px; text-align: center; border: 1px solid var(--border); }
         .login-input { width: 100%; padding: 14px; margin-bottom: 12px; border: 1px solid var(--input-border); border-radius: 12px; box-sizing: border-box; font-size: 16px; background: var(--input-bg); color: var(--text-main); }
@@ -71,7 +40,7 @@
         .app-switch-btn { flex: 1; border: none; background: transparent; padding: 10px; border-radius: 10px; font-weight: 600; color: var(--text-sec); cursor: pointer; transition: 0.2s; }
         .app-switch-btn.active { background: var(--card-bg); color: var(--text-main); box-shadow: 0 2px 5px var(--shadow); }
 
-        /* --- SHARED LAYOUT STYLES --- */
+        /* SHARED UI */
         .sidebar { width: 360px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; z-index: 2; transition: background 0.3s; }
         .sidebar-header { padding: 15px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border); }
         .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
@@ -85,7 +54,7 @@
         .logout-btn:hover { background: #ffebee; color: red; border-color: #ffcdd2; }
         .main { flex: 1; display: flex; flex-direction: column; background: var(--card-bg); position: relative; z-index: 1; }
 
-        /* --- CHAT STYLES --- */
+        /* CHAT STYLES */
         .search-box { position: relative; margin-bottom: 10px; }
         .search-box input { width: 100%; padding: 12px 35px 12px 14px; box-sizing: border-box; border: 1px solid var(--input-border); border-radius: 12px; background: var(--input-bg); color: var(--text-main); font-size: 15px; }
         .search-box span { position: absolute; right: 12px; top: 12px; color: var(--text-sec); }
@@ -110,6 +79,7 @@
         .assign-tag { font-size: 11px; padding: 2px 8px; border-radius: 12px; font-weight: 600; }
         .assign-tag.user { background: rgba(52, 152, 219, 0.1); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.2); }
         .assign-tag.none { background: rgba(243, 156, 18, 0.1); color: #f39c12; border: 1px solid rgba(243, 156, 18, 0.2); }
+        
         .chat-header { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: var(--card-bg); flex-shrink: 0; }
         .back-btn { display: none; background: none; border: none; font-size: 24px; color: var(--text-main); padding-right: 15px; }
         .header-info h3 { margin: 0; font-size: 16px; font-weight: 700; color: var(--text-main); }
@@ -120,11 +90,13 @@
         .status-closed { background: var(--hover-btn); color: var(--text-sec); border: 1px solid var(--border); }
         .btn-trash { background: none; border: 1px solid var(--border); width: 36px; height: 36px; border-radius: 50%; color: var(--red); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .btn-sms-toggle { background: rgba(52, 152, 219, 0.15); color: #3498db; border: none; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        
         #smsPanel { background: var(--active-item); border-bottom: 1px solid var(--primary); padding: 10px 20px; display: none; gap: 10px; align-items: center; animation: slideDown 0.3s ease; position: relative; }
         .sms-input { padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; width: 140px; background: var(--card-bg); color: var(--text-main); }
         .sms-select { padding: 8px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; flex: 1; background: var(--card-bg); color: var(--text-main); }
         .btn-send-sms { background: var(--orange); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; }
         .sms-close { position: absolute; top:5px; right:5px; background:none; border:none; color: var(--text-sec); font-weight:bold; cursor:pointer;}
+
         .messages-area { flex: 1; padding: 20px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 10px; }
         .msg { max-width: 75%; padding: 12px 16px; border-radius: 18px; font-size: 15px; position: relative; display: flex; flex-direction: column; line-height: 1.4; box-shadow: 0 1px 2px var(--shadow); }
         .msg.user { align-self: flex-start; background: var(--msg-user-bg); border-bottom-left-radius: 4px; color: var(--msg-user-text); }
@@ -141,53 +113,33 @@
         .media-btn { background: var(--hover-btn); color: var(--text-sec); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
         .media-btn:hover { background: var(--border); color: var(--text-main); }
 
-        /* --- SHAKE ADMIN STYLES (NEW) --- */
+        /* --- SHAKE UI --- */
         .shake-container { padding: 20px; overflow-y: auto; height: 100%; box-sizing: border-box; background: var(--bg); display: flex; flex-direction: column; }
         .shake-header { margin-bottom: 25px; }
         .shake-header h1 { margin: 0; color: var(--text-main); font-size: 26px; }
         .shake-header p { margin: 5px 0 0 0; color: var(--text-sec); font-size: 14px; }
-        
-        .section-title { font-size: 14px; font-weight: 700; color: var(--text-sec); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
-
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        
-        .shake-stat-card {
-            background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border);
-            box-shadow: 0 4px 15px var(--shadow); position: relative; overflow: hidden;
-            display: flex; flex-direction: column; justify-content: space-between; height: 100px;
-        }
+        .shake-stat-card { background: var(--card-bg); padding: 20px; border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 4px 15px var(--shadow); position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; height: 100px; }
         .shake-stat-card h3 { margin: 0; font-size: 14px; color: var(--text-sec); z-index: 1; }
         .shake-stat-value { font-size: 32px; font-weight: 800; color: var(--text-main); z-index: 1; margin-top: 5px; }
-        .shake-stat-icon {
-            position: absolute; right: 15px; top: 15px; font-size: 40px; opacity: 0.1;
-            transform: rotate(-15deg); z-index: 0;
-        }
-        /* Card Colors */
-        .card-purple { border-left: 4px solid var(--purple); }
-        .card-purple .shake-stat-value { color: var(--purple); }
-        .card-blue { border-left: 4px solid var(--blue); }
-        .card-blue .shake-stat-value { color: var(--blue); }
-        .card-green { border-left: 4px solid var(--green); }
-        .card-green .shake-stat-value { color: var(--green); }
-        .card-orange { border-left: 4px solid var(--orange); }
-        .card-orange .shake-stat-value { color: var(--orange); }
-
+        .shake-stat-icon { position: absolute; right: 15px; top: 15px; font-size: 40px; opacity: 0.1; transform: rotate(-15deg); z-index: 0; }
+        .card-purple { border-left: 4px solid var(--purple); } .card-purple .shake-stat-value { color: var(--purple); }
+        .card-blue { border-left: 4px solid var(--blue); } .card-blue .shake-stat-value { color: var(--blue); }
+        .card-green { border-left: 4px solid var(--green); } .card-green .shake-stat-value { color: var(--green); }
+        .card-orange { border-left: 4px solid var(--orange); } .card-orange .shake-stat-value { color: var(--orange); }
+        
         .shake-list-container { flex: 1; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 4px 12px var(--shadow); }
         .shake-tools { padding: 15px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; background: var(--card-bg); }
         .shake-list-scroll { flex: 1; overflow-y: auto; }
-        
         .shake-row { padding: 15px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; transition: 0.2s; }
         .shake-row:hover { background: var(--hover-btn); }
         .shake-info { display: flex; align-items: center; gap: 15px; }
         .shake-avatar { width: 45px; height: 45px; background: var(--hover-btn); color: var(--primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; border: 1px solid var(--border); }
         .shake-details strong { display: block; font-size: 15px; color: var(--text-main); margin-bottom: 2px; }
         .shake-details span { font-size: 12px; color: var(--text-sec); display: block; }
-        .shake-prize-badge { 
-            font-weight: 700; color: var(--green); font-size: 13px; background: rgba(46, 204, 113, 0.1); 
-            padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(46, 204, 113, 0.2); 
-        }
+        .shake-prize-badge { font-weight: 700; color: var(--green); font-size: 13px; background: rgba(46, 204, 113, 0.1); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(46, 204, 113, 0.2); }
 
-        /* --- SETTINGS MODAL --- */
+        /* --- SETTINGS & MODALS --- */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: var(--card-bg); width: 95%; max-width: 600px; border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 20px 50px rgba(0,0,0,0.4); border: 1px solid var(--border); }
         .modal-tabs { display: flex; background: var(--card-bg); padding: 10px; border-bottom: 1px solid var(--border); overflow-x: auto; flex-shrink: 0; }
@@ -212,10 +164,11 @@
         .promo-stats-box { margin-top: 20px; background: var(--card-bg); border-radius: 16px; padding: 15px; border: 1px solid var(--border); }
         .promo-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
         .promo-count { font-weight: bold; color: var(--primary); }
-        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-        .checkbox-wrapper input { width: 18px; height: 18px; accent-color: var(--primary); }
-        .checkbox-wrapper span { font-size: 13px; color: var(--text-main); font-weight: 500; }
 
+        /* PRIZE GRID STYLES */
+        .prize-row {
+            display: grid; grid-template-columns: 2fr 2fr 1fr auto; gap: 10px; align-items: end;
+        }
         @media (max-width: 768px) {
             .sidebar { width: 100%; height: 100%; position: absolute; }
             .main, .shake-container { width: 100%; height: 100%; position: absolute; transform: translateX(100%); transition: transform 0.3s; }
@@ -234,6 +187,9 @@
             .modal { align-items: flex-end; } 
             .modal-content { width: 100%; max-width: 100%; height: 85vh; border-radius: 24px 24px 0 0; margin: 0; }
             .modal-tabs { position: sticky; top: 0; z-index: 10; background: var(--card-bg); }
+            
+            .prize-row { grid-template-columns: 1fr; gap: 15px; }
+            .prize-row .btn-remove { position: absolute; top: 10px; right: 10px; }
         }
     </style>
 </head>
@@ -254,7 +210,6 @@
 </div>
 
 <div id="app-chat" class="app-module">
-    
     <div id="settingsModal" class="modal">
         <div class="modal-content">
             <div class="modal-tabs">
@@ -302,10 +257,7 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="top-row">
-                <div class="user-info-box">
-                    <h2>Latiao CRM</h2>
-                    <div id="dynamicGreeting" class="typing-container"></div>
-                </div>
+                <div class="user-info-box"><h2>Latiao CRM</h2><div id="dynamicGreeting" class="typing-container"></div></div>
                 <div class="header-actions">
                     <button id="themeBtn" class="icon-btn" onclick="toggleTheme()">🌙</button>
                     <button id="btnSettings" class="icon-btn" onclick="openSettings()" style="display:none;">⚙️</button>
@@ -356,17 +308,24 @@
 <div id="app-shake" class="app-module">
     
     <div id="shakeSettingsModal" class="modal">
-        <div class="modal-content" style="height:auto;">
+        <div class="modal-content">
             <div style="padding:20px;border-bottom:1px solid var(--border);"><h3>Налаштування Shake</h3></div>
-            <div style="padding:20px;">
-                <p style="color:var(--text-sec)">Тут ви зможете налаштувати призи, шанси випадання та інші параметри гри.</p>
+            <div style="padding:20px; overflow-y:auto; flex:1;">
+                
+                <h4 style="margin:0 0 10px 0; color:var(--text-main);">Параметри гри</h4>
                 <div class="setting-card">
-                    <div class="input-group"><label>Шанс виграшу (%)</label><input type="number" class="styled-input" value="30"></div>
-                    <div class="input-group"><label>Макс. спроб на день</label><input type="number" class="styled-input" value="3"></div>
+                    <div class="input-group"><label>Шанс виграшу (%)</label><input type="number" class="styled-input" id="gameChanceInput" value="30"></div>
+                    <div class="input-group"><label>Макс. спроб на день</label><input type="number" class="styled-input" id="gameAttemptsInput" value="3"></div>
                 </div>
+
+                <h4 style="margin:20px 0 10px 0; color:var(--text-main);">Список призів</h4>
+                <div id="prizesList"></div>
+                <button onclick="addPrizeField()" class="btn-add">+ Додати приз</button>
+
             </div>
             <div class="sticky-footer">
                 <button onclick="document.getElementById('shakeSettingsModal').style.display='none'" class="btn-close">Закрити</button>
+                <button onclick="saveShakeSettings()" class="btn-save">Зберегти налаштування</button>
             </div>
         </div>
     </div>
@@ -380,7 +339,7 @@
                 </div>
                 <div class="header-actions">
                     <button id="themeBtnShake" class="icon-btn" onclick="toggleTheme()">🌙</button>
-                    <button class="icon-btn" onclick="document.getElementById('shakeSettingsModal').style.display='flex'">⚙️</button>
+                    <button class="icon-btn" onclick="openShakeSettings()">⚙️</button>
                     <button class="icon-btn logout-btn" onclick="logout()">🚪</button>
                 </div>
             </div>
@@ -393,59 +352,26 @@
     <div class="main">
         <div class="shake-container">
             <div class="shake-header">
-                <div>
-                    <h1>Дашборд</h1>
-                    <p>Статистика активності</p>
-                </div>
+                <div><h1>Статистика гри</h1><p>Активність користувачів</p></div>
             </div>
 
-            <div class="section-title">Сьогодні</div>
             <div class="dash-grid">
-                <div class="shake-stat-card card-purple">
-                    <h3>Трусили разів</h3>
-                    <div class="shake-stat-value" id="shakeShakesToday">0</div>
-                    <div class="shake-stat-icon">📱</div>
-                </div>
-                <div class="shake-stat-card card-green">
-                    <h3>Виграно призів</h3>
-                    <div class="shake-stat-value" id="shakeWinsToday">0</div>
-                    <div class="shake-stat-icon">🎁</div>
-                </div>
-                <div class="shake-stat-card card-blue">
-                    <h3>Відвідувачі</h3>
-                    <div class="shake-stat-value" id="shakeVisitsToday">0</div>
-                    <div class="shake-stat-icon">👥</div>
-                </div>
-                <div class="shake-stat-card card-orange">
-                    <h3>Час у грі</h3>
-                    <div class="shake-stat-value" id="shakeTimeToday">0m</div>
-                    <div class="shake-stat-icon">⏳</div>
-                </div>
+                <div class="shake-stat-card card-purple"><h3>Трусили разів</h3><div class="shake-stat-value" id="shakeShakesToday">0</div><div class="shake-stat-icon">📱</div></div>
+                <div class="shake-stat-card card-green"><h3>Виграно призів</h3><div class="shake-stat-value" id="shakeWinsToday">0</div><div class="shake-stat-icon">🎁</div></div>
+                <div class="shake-stat-card card-blue"><h3>Відвідувачі</h3><div class="shake-stat-value" id="shakeVisitsToday">0</div><div class="shake-stat-icon">👥</div></div>
+                <div class="shake-stat-card card-orange"><h3>Час у грі</h3><div class="shake-stat-value" id="shakeTimeToday">0m</div><div class="shake-stat-icon">⏳</div></div>
             </div>
 
             <div class="section-title">За весь час</div>
             <div class="dash-grid">
-                <div class="shake-stat-card">
-                    <h3>Всього спроб</h3>
-                    <div class="shake-stat-value" id="shakeTotalShakes">0</div>
-                </div>
-                <div class="shake-stat-card">
-                    <h3>Всього перемог</h3>
-                    <div class="shake-stat-value" id="shakeTotalWins">0</div>
-                </div>
-                <div class="shake-stat-card">
-                    <h3>Всього годин</h3>
-                    <div class="shake-stat-value" id="shakeTotalTime">0h</div>
-                </div>
+                <div class="shake-stat-card"><h3>Всього спроб</h3><div class="shake-stat-value" id="shakeTotalShakes">0</div></div>
+                <div class="shake-stat-card"><h3>Всього перемог</h3><div class="shake-stat-value" id="shakeTotalWins">0</div></div>
+                <div class="shake-stat-card"><h3>Всього годин</h3><div class="shake-stat-value" id="shakeTotalTime">0h</div></div>
             </div>
 
             <div class="shake-list-container">
-                <div class="shake-tools">
-                    <input type="text" id="shakeSearch" placeholder="Пошук переможця за телефоном..." class="styled-input" onkeyup="renderShakeList()">
-                </div>
-                <div class="shake-list-scroll" id="shakeList">
-                    <p style="text-align:center; color:var(--text-sec); padding:20px;">Дані завантажуються...</p>
-                </div>
+                <div class="shake-tools"><input type="text" id="shakeSearch" placeholder="Пошук переможця за телефоном..." class="styled-input" onkeyup="renderShakeList()"></div>
+                <div class="shake-list-scroll" id="shakeList"><p style="text-align:center; color:var(--text-sec); padding:20px;">Дані завантажуються...</p></div>
             </div>
         </div>
     </div>
@@ -456,40 +382,28 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // GLOBAL VARS
-    let selectedMode = 'chat'; // 'chat' or 'shake'
-    let allChats=[], managers=[], savedScripts=[], savedFaq=[], savedPromos=[], shakeLeads=[];
+    let selectedMode = 'chat';
+    let allChats=[], managers=[], savedScripts=[], savedFaq=[], savedPromos=[], shakeLeads=[], savedPrizes=[];
     let currentChatId=null, currentChatStatus='open', filterType='open';
     let tgBotToken="", superAdminId="", turboToken="", turboSender="";
     let currentUser=null; const SESSION_TIMEOUT = 24*60*60*1000;
 
-    // STARTUP
     checkSession();
 
     function selectLoginMode(mode) {
         selectedMode = mode;
         document.querySelectorAll('.app-switch-btn').forEach(b => b.classList.remove('active'));
-        if(mode === 'chat') {
-            document.getElementById('modeChatBtn').classList.add('active');
-            document.getElementById('loginTitle').innerText = 'Вхід у підтримку';
-        } else {
-            document.getElementById('modeShakeBtn').classList.add('active');
-            document.getElementById('loginTitle').innerText = 'Вхід у Shake Admin';
-        }
+        if(mode === 'chat') { document.getElementById('modeChatBtn').classList.add('active'); document.getElementById('loginTitle').innerText = 'Вхід у підтримку'; } 
+        else { document.getElementById('modeShakeBtn').classList.add('active'); document.getElementById('loginTitle').innerText = 'Вхід у Shake Admin'; }
     }
 
     function checkSession() {
         const storedUser = localStorage.getItem('lc_user');
         const loginTime = localStorage.getItem('lc_time');
         const savedMode = localStorage.getItem('lc_mode');
-
         if (storedUser && loginTime) {
             if (Date.now() - parseInt(loginTime) > SESSION_TIMEOUT) logout();
-            else { 
-                currentUser = JSON.parse(storedUser); 
-                selectedMode = savedMode || 'chat'; // Restore mode
-                initApp(); 
-            }
+            else { currentUser = JSON.parse(storedUser); selectedMode = savedMode || 'chat'; initApp(); }
         } else { document.getElementById('loginScreen').style.display = 'flex'; }
     }
 
@@ -500,177 +414,141 @@
         db.ref('config/managers').once('value', snap => {
             const mgrs = snap.val() || [];
             let found = mgrs.find(m => m.login === login && m.password === pass);
-            if (!found && login === 'admin' && pass === 'admin' && mgrs.length === 0) {
-                found = { name: 'Super Admin', id: 'root', role: 'admin', accessAnalytics: true };
-            } else if (found && found.login === 'admin') {
-                found.role = 'admin'; 
-            }
-
+            if (!found && login === 'admin' && pass === 'admin' && mgrs.length === 0) { found = { name: 'Super Admin', id: 'root', role: 'admin', accessAnalytics: true }; }
+            else if (found && found.login === 'admin') { found.role = 'admin'; }
             if (found) {
                 currentUser = { ...found, role: found.role || 'manager' };
                 localStorage.setItem('lc_user', JSON.stringify(currentUser));
                 localStorage.setItem('lc_time', Date.now());
-                localStorage.setItem('lc_mode', selectedMode); // Save selected mode
+                localStorage.setItem('lc_mode', selectedMode);
                 initApp();
             } else { alert('Помилка входу'); }
         });
     }
-    
-    function logout() { 
-        localStorage.removeItem('lc_user'); 
-        localStorage.removeItem('lc_time'); 
-        localStorage.removeItem('lc_mode');
-        location.reload(); 
-    }
+    function logout() { localStorage.removeItem('lc_user'); localStorage.removeItem('lc_time'); localStorage.removeItem('lc_mode'); location.reload(); }
 
     function initApp() {
         document.getElementById('loginScreen').style.display = 'none';
-        
-        // Theme Load
         const savedTheme = localStorage.getItem('lc_theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
         const icon = savedTheme === 'dark' ? '☀️' : '🌙';
         document.getElementById('themeBtn').innerText = icon;
         document.getElementById('themeBtnShake').innerText = icon;
 
-        // HIDE ALL MODULES INITIALLY
         document.querySelectorAll('.app-module').forEach(el => el.classList.remove('active'));
-
-        if (selectedMode === 'chat') {
-            document.getElementById('app-chat').classList.add('active');
-            initChatLogic();
-        } else {
-            document.getElementById('app-shake').classList.add('active');
-            initShakeLogic();
-        }
+        if (selectedMode === 'chat') { document.getElementById('app-chat').classList.add('active'); initChatLogic(); }
+        else { document.getElementById('app-shake').classList.add('active'); initShakeLogic(); }
     }
 
-    // --- CHAT LOGIC ---
     function initChatLogic() {
         startTyper(currentUser.name);
-        
-        if (currentUser.role === 'admin') {
-            document.getElementById('btnSettings').style.display = 'flex';
-        }
+        if (currentUser.role === 'admin') document.getElementById('btnSettings').style.display = 'flex';
         loadSettings();
-        
         db.ref('active_chats').on('value', snap => {
             allChats = [];
             snap.forEach(child => {
                 const chatObj = { id: child.key, ...child.val() };
-                // Assign Logic
                 if (!chatObj.assignedTo && chatObj.status !== 'closed' && managers.length > 0) {
                     const isFaq = savedFaq.some(f => f.q === chatObj.lastMsg);
                     const isInvite = chatObj.lastMsg === "🗣 Запросити менеджера" || chatObj.lastMsg.toLowerCase().includes("менеджер");
-                    if (isInvite || (!isFaq && !chatObj.lastMsg.startsWith("Bot:"))) {
-                        assignManager(managers[0].id, chatObj.id, "auto");
-                        chatObj.assignedTo = managers[0].id;
-                    }
+                    if (isInvite || (!isFaq && !chatObj.lastMsg.startsWith("Bot:"))) { assignManager(managers[0].id, chatObj.id, "auto"); chatObj.assignedTo = managers[0].id; }
                 }
                 allChats.push(chatObj);
             });
             allChats.sort((a, b) => b.ts - a.ts);
             renderChatList();
-            if(currentChatId) {
-                 const d = allChats.find(c => c.id === currentChatId);
-                 if(d) {
-                     document.getElementById('managerSelect').value = d.assignedTo || "";
-                     currentChatStatus = d.status || 'open';
-                     updateStatusButtonUI(currentChatStatus);
-                 }
-            }
+            if(currentChatId) updateManagerDropdown(allChats.find(c => c.id === currentChatId)?.assignedTo);
         });
         setInterval(checkAutoReassignment, 30000);
     }
 
-    // --- SHAKE LOGIC & ANALYTICS ---
     function initShakeLogic() {
         db.ref('shake_leads').on('value', snap => {
             shakeLeads = [];
             snap.forEach(child => shakeLeads.push({id: child.key, ...child.val()}));
-            // Mock data if empty for visualization
             if (shakeLeads.length === 0) mockShakeData(); else shakeLeads.sort((a,b) => b.ts - a.ts);
-            
             renderShakeView();
         });
     }
 
+    /* --- SHAKE FUNCTIONS (Mock + Real) --- */
     function mockShakeData() {
-        // Just for demo if no real data
         shakeLeads = [
             { id: '1', phone: '380991234567', prize: 'Знижка -15%', code: 'SHAKE15', ts: Date.now() - 3600000 },
             { id: '2', phone: '380678889900', prize: 'Безкоштовна доставка', code: 'FREESHIP', ts: Date.now() - 7200000 },
             { id: '3', phone: '380931112233', prize: 'Секретний Снек', code: 'BONUS', ts: Date.now() - 86400000 }
         ];
     }
-
     function renderShakeView() {
-        const list = document.getElementById('shakeList');
-        const search = document.getElementById('shakeSearch').value.toLowerCase();
-        list.innerHTML = '';
-        
-        let totalWins = shakeLeads.length;
-        let todayWins = 0;
-        const now = new Date();
-        
+        const list = document.getElementById('shakeList'); const search = document.getElementById('shakeSearch').value.toLowerCase(); list.innerHTML = '';
+        let totalWins = shakeLeads.length; let todayWins = 0; const now = new Date();
         const filtered = shakeLeads.filter(l => l.phone.includes(search));
-        
         filtered.forEach(item => {
             if (new Date(item.ts).getDate() === now.getDate()) todayWins++;
-            
             const time = new Date(item.ts).toLocaleString('uk-UA');
-            const div = document.createElement('div');
-            div.className = 'shake-row';
-            div.innerHTML = `
-                <div class="shake-info">
-                    <div class="shake-avatar">👤</div>
-                    <div class="shake-details">
-                        <strong>${item.phone}</strong>
-                        <span>${time} | Код: <b>${item.code}</b></span>
-                    </div>
-                </div>
-                <div class="shake-prize-badge">${item.prize}</div>
-            `;
+            const div = document.createElement('div'); div.className = 'shake-row';
+            div.innerHTML = `<div class="shake-info"><div class="shake-avatar">👤</div><div class="shake-details"><strong>${item.phone}</strong><span>${time} | Код: <b>${item.code}</b></span></div></div><div class="shake-prize-badge">${item.prize}</div>`;
             list.appendChild(div);
         });
-        
-        // --- CALCULATED MOCK METRICS (To make dashboard alive) ---
-        // Assuming ~30% win rate for "Total Shakes"
-        // Assuming ~2 min per session for "Time"
-        
-        const estTotalShakes = Math.floor(totalWins * 3.3) + 12; // Mock logic
-        const estTodayShakes = Math.floor(todayWins * 3.5) + 4;  // Mock logic
-        const estVisits = Math.floor(estTotalShakes * 1.5);
-        const estTimeToday = Math.floor(estTodayShakes * 1.2); // Minutes
-        const estTimeTotal = Math.floor(estTotalShakes * 1.2 / 60); // Hours
+        const estTotalShakes = Math.floor(totalWins * 3.3) + 12; const estTodayShakes = Math.floor(todayWins * 3.5) + 4; const estVisits = Math.floor(estTotalShakes * 1.5); const estTimeToday = Math.floor(estTodayShakes * 1.2); const estTimeTotal = Math.floor(estTotalShakes * 1.2 / 60);
+        animateValue("shakeShakesToday", 0, estTodayShakes, 1000); animateValue("shakeWinsToday", 0, todayWins, 1000); animateValue("shakeVisitsToday", 0, Math.floor(estTodayShakes * 1.4), 1000); document.getElementById("shakeTimeToday").innerText = estTimeToday + "m";
+        animateValue("shakeTotalShakes", 0, estTotalShakes, 1500); animateValue("shakeTotalWins", 0, totalWins, 1500); document.getElementById("shakeTotalTime").innerText = estTimeTotal + "h";
+    }
+    function animateValue(id, start, end, duration) { const obj = document.getElementById(id); if(!obj) return; let startTimestamp = null; const step = (timestamp) => { if (!startTimestamp) startTimestamp = timestamp; const progress = Math.min((timestamp - startTimestamp) / duration, 1); obj.innerHTML = Math.floor(progress * (end - start) + start); if (progress < 1) { window.requestAnimationFrame(step); } }; window.requestAnimationFrame(step); }
 
-        // Update Dashboard with Animation
-        animateValue("shakeShakesToday", 0, estTodayShakes, 1000);
-        animateValue("shakeWinsToday", 0, todayWins, 1000);
-        animateValue("shakeVisitsToday", 0, Math.floor(estTodayShakes * 1.4), 1000);
-        document.getElementById("shakeTimeToday").innerText = estTimeToday + "m";
-
-        animateValue("shakeTotalShakes", 0, estTotalShakes, 1500);
-        animateValue("shakeTotalWins", 0, totalWins, 1500);
-        document.getElementById("shakeTotalTime").innerText = estTimeTotal + "h";
+    /* --- SHAKE PRIZES SETTINGS --- */
+    function openShakeSettings() {
+        document.getElementById('shakeSettingsModal').style.display='flex';
+        // Load Prizes
+        db.ref('config/prizes').once('value', snap => {
+            savedPrizes = snap.val() || [];
+            renderPrizesInputs();
+        });
+        db.ref('config/game_params').once('value', snap => {
+            const p = snap.val() || {};
+            document.getElementById('gameChanceInput').value = p.chance || 30;
+            document.getElementById('gameAttemptsInput').value = p.attempts || 3;
+        });
+    }
+    
+    function renderPrizesInputs() {
+        const list = document.getElementById('prizesList'); list.innerHTML = '';
+        savedPrizes.forEach(p => addPrizeField(p.name, p.code, p.chance));
+        if (savedPrizes.length === 0) addPrizeField();
+    }
+    
+    function addPrizeField(name='', code='', chance='') {
+        const div = document.createElement('div'); div.className = 'setting-card prize-row';
+        div.innerHTML = `
+            <div class="input-group"><label>Назва</label><input type="text" class="styled-input prize-name" value="${name}" placeholder="Знижка 10%"></div>
+            <div class="input-group"><label>Купон</label><input type="text" class="styled-input prize-code" value="${code}" placeholder="SALE10"></div>
+            <div class="input-group"><label>Шанс %</label><input type="number" class="styled-input prize-chance" value="${chance}" placeholder="10"></div>
+            <button onclick="this.parentElement.remove()" class="btn-remove" style="margin-bottom:5px;">✕</button>
+        `;
+        document.getElementById('prizesList').appendChild(div);
+    }
+    
+    function saveShakeSettings() {
+        const newPrizes = [];
+        document.querySelectorAll('.prize-row').forEach(el => {
+            const name = el.querySelector('.prize-name').value.trim();
+            const code = el.querySelector('.prize-code').value.trim();
+            const chance = el.querySelector('.prize-chance').value.trim();
+            if(name && code) newPrizes.push({name, code, chance: parseInt(chance)||0});
+        });
+        
+        const chance = parseInt(document.getElementById('gameChanceInput').value) || 30;
+        const attempts = parseInt(document.getElementById('gameAttemptsInput').value) || 3;
+        
+        db.ref('config/prizes').set(newPrizes);
+        db.ref('config/game_params').set({chance, attempts});
+        
+        savedPrizes = newPrizes;
+        document.getElementById('shakeSettingsModal').style.display='none';
+        alert('Налаштування Shake збережено!');
     }
 
-    function animateValue(id, start, end, duration) {
-        const obj = document.getElementById(id);
-        if(!obj) return;
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            obj.innerHTML = Math.floor(progress * (end - start) + start);
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            }
-        };
-        window.requestAnimationFrame(step);
-    }
-
-    // --- COMMON HELPERS ---
+    /* --- COMMON HELPERS --- */
     function toggleTheme() {
         const html = document.documentElement;
         const current = html.getAttribute('data-theme');
@@ -681,14 +559,9 @@
         document.getElementById('themeBtn').innerText = icon;
         document.getElementById('themeBtnShake').innerText = icon;
     }
-
     function startTyper(name) {
         const hour = new Date().getHours();
-        let greeting = "Привіт";
-        if (hour >= 5 && hour < 11) greeting = "Доброго ранку";
-        else if (hour >= 11 && hour < 18) greeting = "Добрий день";
-        else if (hour >= 18 && hour < 23) greeting = "Добрий вечір";
-        else greeting = "Доброї ночі";
+        let greeting = hour < 11 ? "Доброго ранку" : hour < 18 ? "Добрий день" : "Добрий вечір";
         const text = `${greeting}, ${name}`;
         const container = document.getElementById('dynamicGreeting');
         if(!container) return; 
@@ -698,7 +571,7 @@
         type();
     }
 
-    // --- CHAT RENDERERS (Standard) ---
+    // --- CHAT RENDERERS ---
     function renderChatList() {
         const container = document.getElementById('chatList');
         const search = document.getElementById('searchInput').value.toLowerCase();
@@ -737,9 +610,7 @@
             container.appendChild(div);
         });
     }
-
     function setFilter(type) { filterType = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); document.getElementById('btn' + type.charAt(0).toUpperCase() + type.slice(1)).classList.add('active'); renderChatList(); }
-
     function openChat(chatId) {
         currentChatId = chatId; renderChatList(); document.body.classList.add('chat-open');
         const chatData = allChats.find(c => c.id === chatId);
@@ -762,7 +633,6 @@
         });
         renderQuickScripts();
     }
-
     function toggleSmsPanel() { const p = document.getElementById('smsPanel'); p.style.display = p.style.display === 'none' ? 'flex' : 'none'; const sel = document.getElementById('smsPromoSelect'); sel.innerHTML = '<option value="">Оберіть промо-код...</option>'; savedPromos.forEach(pr => { const opt = document.createElement('option'); opt.value = pr.text; opt.innerText = pr.title; sel.appendChild(opt); }); }
     function sendTurboSMS() {
         if (!turboToken) return alert("Налаштуйте TurboSMS!");
@@ -781,7 +651,6 @@
             } else { alert("Помилка відправки: " + (data.response_status || "Невідомо")); }
         }).catch(err => { btn.disabled = false; btnText.innerText = originalText; alert("Помилка мережі"); });
     }
-
     function handleImageUpload(input) { if (input.files && input.files[0]) { const file = input.files[0]; const reader = new FileReader(); reader.onload = function(e) { const img = new Image(); img.src = e.target.result; img.onload = function() { const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); const MAX_WIDTH = 800; let width = img.width; let height = img.height; if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } canvas.width = width; canvas.height = height; ctx.drawImage(img, 0, 0, width, height); const dataUrl = canvas.toDataURL('image/jpeg', 0.7); sendMessage(dataUrl, 'image'); } }; reader.readAsDataURL(file); } }
     function renderQuickScripts() { const bar = document.getElementById('quickScripts'); if (savedScripts.length === 0) { bar.style.display = 'none'; return; } bar.style.display = 'flex'; bar.innerHTML = ''; savedScripts.forEach(s => { const chip = document.createElement('div'); chip.className = 'script-chip'; chip.innerText = s.title; chip.onclick = () => useScript(s.text); bar.appendChild(chip); }); }
     function useScript(text) { document.getElementById('msgInput').value = text; document.getElementById('msgInput').focus(); }
