@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao Admin Mobile</title>
+    <title>Latiao Admin Mobile + Stats</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -14,6 +14,7 @@
             --sidebar-bg: #fff;
             --border: #e1e4e8;
             --active-item: #fff5f5;
+            --text-gray: #666;
         }
 
         body {
@@ -22,11 +23,11 @@
             margin: 0;
             display: flex;
             height: 100vh;
-            height: 100dvh; /* Для мобільних браузерів */
+            height: 100dvh; 
             overflow: hidden;
         }
 
-        /* --- Sidebar (Chat List) --- */
+        /* --- Sidebar --- */
         .sidebar {
             width: 350px;
             background: var(--sidebar-bg);
@@ -55,7 +56,7 @@
         .search-box input {
             width: 100%; padding: 10px 35px 10px 12px;
             box-sizing: border-box; border: 1px solid #ddd;
-            border-radius: 10px; background: #f9f9f9; font-size: 16px; /* 16px to prevent zoom on iOS */
+            border-radius: 10px; background: #f9f9f9; font-size: 16px;
         }
         .search-box span { position: absolute; right: 10px; top: 10px; color: #999; }
 
@@ -77,7 +78,6 @@
         .chat-item.active { background: var(--active-item); border-left: 4px solid var(--primary); }
         .chat-item.unread { background: #fffcfc; }
         .chat-item.unread strong { color: var(--primary); }
-        
         .chat-item.closed { opacity: 0.7; background: #f8f9fa; }
 
         .assigned-tag {
@@ -86,24 +86,20 @@
             vertical-align: middle;
         }
 
-        /* --- Main Area (Chat Window) --- */
+        /* --- Main Area --- */
         .main {
             flex: 1; display: flex; flex-direction: column;
-            background: #fff; position: relative;
-            z-index: 1;
+            background: #fff; position: relative; z-index: 1;
         }
 
         .chat-header {
             height: 60px; border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 15px; background: #fff;
-            flex-shrink: 0;
+            padding: 0 15px; background: #fff; flex-shrink: 0;
         }
 
-        /* Back Button (Mobile Only) */
         .back-btn {
-            display: none; /* Hidden on desktop */
-            background: none; border: none; font-size: 24px;
+            display: none; background: none; border: none; font-size: 24px;
             color: #333; cursor: pointer; padding: 0 10px 0 0;
         }
         
@@ -123,7 +119,6 @@
         }
         .btn-close-chat { background: #e0f7fa; color: #006064; }
         .btn-open-chat { background: #ffebee; color: #c62828; }
-        
         .btn-icon { background: none; border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
 
         .messages-area {
@@ -139,7 +134,6 @@
         }
         .msg.user { align-self: flex-start; background: #fff; border: 1px solid #eee; border-bottom-left-radius: 4px; }
         .msg.admin { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 4px; }
-        
         .msg-time { font-size: 10px; margin-top: 4px; align-self: flex-end; opacity: 0.7; }
         .msg.admin .msg-time { color: rgba(255,255,255, 0.9); }
         .msg.user .msg-time { color: #999; }
@@ -147,7 +141,7 @@
         .input-area {
             padding: 10px; border-top: 1px solid var(--border);
             display: flex; gap: 10px; background: #fff;
-            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* Safe area for iPhone X+ */
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
         }
         .input-area input {
             flex: 1; padding: 12px 15px; border: 1px solid #ddd;
@@ -160,41 +154,68 @@
             font-size: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* --- Settings Modal --- */
+        /* --- Settings Modal & Stats --- */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 1000;
             align-items: center; justify-content: center;
         }
         .modal-content {
-            background: white; padding: 25px; border-radius: 16px;
-            width: 90%; max-width: 400px;
+            background: white; padding: 0; border-radius: 16px;
+            width: 90%; max-width: 400px; overflow: hidden;
+            display: flex; flex-direction: column; max-height: 85vh;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
+        
+        .modal-tabs { display: flex; background: #f0f0f0; padding: 5px; }
+        .tab-btn {
+            flex: 1; padding: 10px; border: none; background: none;
+            cursor: pointer; font-weight: 600; color: #666; border-radius: 8px;
+        }
+        .tab-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
+        .tab-content { padding: 20px; overflow-y: auto; display: none; }
+        .tab-content.active { display: block; }
+
         .manager-row { display: flex; gap: 5px; margin-bottom: 8px; }
-        .manager-row input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+        .manager-row input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; width: 100%;}
         .btn-save {
             background: var(--primary); color: white; width: 100%;
             padding: 12px; margin-top: 15px; border: none; border-radius: 10px;
             font-size: 16px; font-weight: bold;
         }
+        
+        /* Stats Styles */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box {
+            background: #f9f9f9; border-radius: 10px; padding: 10px; text-align: center;
+            border: 1px solid #eee;
+        }
+        .stat-num { display: block; font-size: 20px; font-weight: bold; color: #333; }
+        .stat-label { font-size: 11px; color: #888; text-transform: uppercase; }
+        
+        .stat-list { display: flex; flex-direction: column; gap: 8px; }
+        .stat-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px; border-bottom: 1px solid #f0f0f0;
+        }
+        .stat-name { font-weight: 600; font-size: 14px; }
+        .stat-bar { display: flex; gap: 10px; font-size: 12px; }
+        .val-active { color: #e67e22; font-weight: bold; } /* Orange for active */
+        .val-done { color: #27ae60; font-weight: bold; }   /* Green for closed */
 
         /* --- MOBILE ADAPTATION --- */
         @media (max-width: 768px) {
             .sidebar { width: 100%; height: 100%; position: absolute; }
             .main { width: 100%; height: 100%; position: absolute; transform: translateX(100%); transition: transform 0.3s ease; }
-            
-            /* Class toggled via JS */
             body.chat-open .sidebar { transform: translateX(-30%); display: none; } 
             body.chat-open .main { transform: translateX(0); }
-            
             .back-btn { display: block; }
             .header-title-box { max-width: 140px; }
-            .status-btn span { display: none; } /* Show only icon on small screens if needed, or keep text short */
+            .status-btn span { display: none; }
             .status-btn { padding: 8px; }
-            .status-btn::after { content: "✓"; } /* Short status for mobile */
+            .status-btn::after { content: "✓"; }
             .btn-open-chat::after { content: "↺"; }
-            
             .chat-header { padding: 0 10px; }
         }
     </style>
@@ -203,22 +224,50 @@
 
 <div id="settingsModal" class="modal">
     <div class="modal-content">
-        <h3>Налаштування</h3>
-        
-        <label style="font-size:12px; font-weight:bold;">Менеджери:</label>
-        <div id="managersList"></div>
-        <button onclick="addManagerField()" style="background:#eee; border:none; padding:8px; border-radius:6px; width:100%; margin-top:5px;">+ Додати</button>
+        <div class="modal-tabs">
+            <button class="tab-btn active" onclick="switchTab('settings')">Налаштування</button>
+            <button class="tab-btn" onclick="switchTab('stats')">Статистика</button>
+        </div>
 
-        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-        
-        <label style="font-size:12px; font-weight:bold;">Telegram Bot Token:</label>
-        <input type="text" id="tgTokenInput" placeholder="Token..." style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
-        
-        <label style="font-size:12px; font-weight:bold;">Admin ID (для логів):</label>
-        <input type="text" id="adminIdInput" placeholder="ID..." style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px;">
+        <div id="tab-settings" class="tab-content active">
+            <label style="font-size:12px; font-weight:bold;">Менеджери:</label>
+            <div id="managersList"></div>
+            <button onclick="addManagerField()" style="background:#eee; border:none; padding:8px; border-radius:6px; width:100%; margin-top:5px;">+ Додати</button>
 
-        <button class="btn-save" onclick="saveSettings()">Зберегти</button>
-        <button onclick="closeSettings()" style="width:100%; margin-top:10px; background:white; border:1px solid #ddd; padding:12px; border-radius:10px;">Закрити</button>
+            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+            
+            <label style="font-size:12px; font-weight:bold;">Telegram Bot Token:</label>
+            <input type="text" id="tgTokenInput" placeholder="Token..." style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px; margin-bottom:10px;">
+            
+            <label style="font-size:12px; font-weight:bold;">Admin ID (для логів):</label>
+            <input type="text" id="adminIdInput" placeholder="ID..." style="width:100%; padding:10px; box-sizing:border-box; border:1px solid #ddd; border-radius:8px;">
+
+            <button class="btn-save" onclick="saveSettings()">Зберегти</button>
+            <button onclick="closeSettings()" style="width:100%; margin-top:10px; background:white; border:1px solid #ddd; padding:12px; border-radius:10px;">Закрити</button>
+        </div>
+
+        <div id="tab-stats" class="tab-content">
+            <div class="stat-grid">
+                <div class="stat-box">
+                    <span class="stat-num" id="statTotal">0</span>
+                    <span class="stat-label">Всього</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-num" style="color:#e67e22" id="statActive">0</span>
+                    <span class="stat-label">В роботі</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-num" style="color:#27ae60" id="statClosed">0</span>
+                    <span class="stat-label">Закриті</span>
+                </div>
+            </div>
+
+            <h4 style="margin:0 0 10px 0; font-size:14px; color:#666;">По менеджерах:</h4>
+            <div id="managerStatsList" class="stat-list">
+                </div>
+
+            <button onclick="closeSettings()" style="width:100%; margin-top:20px; background:white; border:1px solid #ddd; padding:12px; border-radius:10px;">Закрити</button>
+        </div>
     </div>
 </div>
 
@@ -241,8 +290,7 @@
         </div>
     </div>
     
-    <div class="chat-list" id="chatList">
-        </div>
+    <div class="chat-list" id="chatList"></div>
 </div>
 
 <div class="main">
@@ -276,12 +324,10 @@
 </div>
 
 <script>
-    // --- Config ---
     const firebaseConfig = { databaseURL: "https://latiao-chat-default-rtdb.firebaseio.com" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- State ---
     let allChats = [];
     let currentChatId = null;
     let currentChatStatus = 'open'; 
@@ -290,16 +336,13 @@
     let tgBotToken = "";
     let superAdminId = ""; 
 
-    // --- Init ---
     loadSettings();
     setInterval(checkAutoReassignment, 30000); 
 
-    // --- Data Listeners ---
     db.ref('active_chats').on('value', snap => {
         allChats = [];
         snap.forEach(child => {
             const chatObj = { id: child.key, ...child.val() };
-            // Instant Assign
             if (!chatObj.assignedTo && (chatObj.status !== 'closed') && managers.length > 0) {
                 assignManager(managers[0].id, chatObj.id, "auto");
                 chatObj.assignedTo = managers[0].id;
@@ -320,7 +363,6 @@
         }
     });
 
-    // --- Rendering ---
     function renderChatList() {
         const container = document.getElementById('chatList');
         const search = document.getElementById('searchInput').value.toLowerCase();
@@ -377,14 +419,11 @@
         renderChatList();
     }
 
-    // --- Chat Logic ---
     let msgsListener = null;
 
     function openChat(chatId) {
         currentChatId = chatId;
         renderChatList(); 
-        
-        // Mobile UI Toggle
         document.body.classList.add('chat-open');
         
         const chatData = allChats.find(c => c.id === chatId);
@@ -392,7 +431,6 @@
         currentChatStatus = status;
 
         document.getElementById('chatUserTitle').innerText = 'ID: ' + chatId.substring(0,6);
-        
         updateManagerDropdown(chatData ? chatData.assignedTo : "");
         updateStatusButtonUI(status);
 
@@ -414,10 +452,8 @@
         });
     }
 
-    // Mobile: Back to list
     function closeChatMobile() {
         document.body.classList.remove('chat-open');
-        // Optional: currentChatId = null; 
     }
 
     function renderMessage(msg, container) {
@@ -436,7 +472,6 @@
         container.appendChild(div);
     }
 
-    // --- Status Logic ---
     function updateStatusButtonUI(status) {
         const btn = document.getElementById('statusBtn');
         if (status === 'closed') {
@@ -452,12 +487,8 @@
         db.ref('active_chats/' + currentChatId).update({ status: newStatus });
         currentChatStatus = newStatus;
         updateStatusButtonUI(newStatus);
-        
-        // If finishing chat on mobile, maybe go back to list?
-        // closeChatMobile(); 
     }
 
-    // --- Manager Logic ---
     function updateManagerDropdown(assignedId) {
         const select = document.getElementById('managerSelect');
         select.innerHTML = '<option value="">Немає</option>';
@@ -505,7 +536,6 @@
         }).catch(console.error);
     }
 
-    // --- AUTO PILOT ---
     function checkAutoReassignment() {
         if (managers.length === 0) return; 
         const NOW = Date.now();
@@ -564,12 +594,73 @@
         }
     }
 
-    // --- Settings ---
+    // --- Settings & Stats ---
     function openSettings() {
         document.getElementById('settingsModal').style.display = 'flex';
         renderManagersInputs();
+        switchTab('settings'); // default
     }
     function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        if (tabName === 'settings') {
+            document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+            document.getElementById('tab-settings').classList.add('active');
+        } else {
+            document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+            document.getElementById('tab-stats').classList.add('active');
+            calculateStats();
+        }
+    }
+
+    function calculateStats() {
+        let total = 0, active = 0, closed = 0;
+        let mgrStats = {};
+        
+        // Init managers
+        managers.forEach(m => {
+            mgrStats[m.id] = { name: m.name, active: 0, closed: 0 };
+        });
+
+        // Loop chats
+        allChats.forEach(chat => {
+            total++;
+            const isClosed = chat.status === 'closed';
+            
+            if (isClosed) closed++; else active++;
+
+            if (chat.assignedTo && mgrStats[chat.assignedTo]) {
+                if (isClosed) mgrStats[chat.assignedTo].closed++;
+                else mgrStats[chat.assignedTo].active++;
+            }
+        });
+
+        // Render Global
+        document.getElementById('statTotal').innerText = total;
+        document.getElementById('statActive').innerText = active;
+        document.getElementById('statClosed').innerText = closed;
+
+        // Render Managers
+        const list = document.getElementById('managerStatsList');
+        list.innerHTML = '';
+        
+        Object.keys(mgrStats).forEach(id => {
+            const m = mgrStats[id];
+            const div = document.createElement('div');
+            div.className = 'stat-item';
+            div.innerHTML = `
+                <span class="stat-name">${m.name}</span>
+                <div class="stat-bar">
+                    <span class="val-active" title="В роботі">⚡ ${m.active}</span>
+                    <span class="val-done" title="Закрито">✓ ${m.closed}</span>
+                </div>
+            `;
+            list.appendChild(div);
+        });
+    }
 
     function renderManagersInputs() {
         const list = document.getElementById('managersList');
