@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Latiao CRM (Support Only)</title>
+    <title>Latiao CRM v17.1 (Notif Control)</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -226,6 +226,11 @@
         .promo-stats-box { margin-top: 20px; background: var(--card-bg); border-radius: 16px; padding: 15px; border: 1px solid var(--border); }
         .promo-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
         .promo-count { font-weight: bold; color: var(--primary); }
+        
+        /* NEW: Checkbox style for manager settings */
+        .checkbox-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        .checkbox-wrapper input { width: 18px; height: 18px; accent-color: var(--primary); }
+        .checkbox-wrapper span { font-size: 13px; color: var(--text-main); font-weight: 500; }
 
         @media (max-width: 768px) {
             .sidebar { width: 100%; height: 100%; position: absolute; }
@@ -720,11 +725,14 @@
         if (tgBotToken) {
             const managerName = mgr ? mgr.name : "Невідомий";
             if (managerId && mgr) {
-                let text = "";
-                if (reason === "manual") text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\nID: \`${chatId}\``;
-                else if (reason === "timeout") text = `🚨 *ПЕРЕДАЧА ЧАТУ*\nID: \`${chatId}\`\n(Таймаут)`;
-                else if (reason === "auto") text = `⚡ *НОВИЙ ЧАТ*\nID: \`${chatId}\``;
-                sendTelegram(managerId, text);
+                // Check if notifications are enabled (default true)
+                if (mgr.notificationsEnabled !== false) {
+                    let text = "";
+                    if (reason === "manual") text = `🔔 *ВАМ ПРИЗНАЧЕНО ЧАТ*\nID: \`${chatId}\``;
+                    else if (reason === "timeout") text = `🚨 *ПЕРЕДАЧА ЧАТУ*\nID: \`${chatId}\`\n(Таймаут)`;
+                    else if (reason === "auto") text = `⚡ *НОВИЙ ЧАТ*\nID: \`${chatId}\``;
+                    sendTelegram(managerId, text);
+                }
             }
             if (superAdminId && superAdminId !== managerId) {
                 sendTelegram(superAdminId, `👮‍♂️ *LOG* | ${managerName} | ${reason}\nID: \`${chatId}\``);
@@ -827,7 +835,7 @@
         const mList = document.getElementById('managersList'); mList.innerHTML = '';
         document.getElementById('tgTokenInput').value = tgBotToken; document.getElementById('adminIdInput').value = superAdminId;
         document.getElementById('turboTokenInput').value = turboToken; document.getElementById('turboSenderInput').value = turboSender;
-        managers.forEach((m, i) => addManagerField(m.name, m.id, m.login, m.password, i));
+        managers.forEach((m, i) => addManagerField(m.name, m.id, m.login, m.password, m.notificationsEnabled, i));
         const pList = document.getElementById('promosList'); pList.innerHTML = '';
         savedPromos.forEach((p, i) => addPromoField(p.title, p.text, i));
         const sList = document.getElementById('scriptsList'); sList.innerHTML = '';
@@ -836,9 +844,10 @@
         savedFaq.forEach((f, i) => addFaqField(f.q, f.a, i));
     }
 
-    function addManagerField(name='', id='', login='', pass='', index=Date.now()) {
+    function addManagerField(name='', id='', login='', pass='', access=true, index=Date.now()) {
+        const checked = access !== false ? 'checked' : '';
         const div = document.createElement('div'); div.className = 'setting-card';
-        div.innerHTML = `<div class="card-header"><span class="card-title">Менеджер</span><button onclick="this.parentElement.parentElement.remove()" class="btn-remove">✕</button></div><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><div class="input-group"><label>Ім'я</label><input type="text" class="styled-input mgr-name" value="${name}"></div><div class="input-group"><label>Telegram ID</label><input type="text" class="styled-input mgr-id" value="${id}"></div><div class="input-group"><label>Логін</label><input type="text" class="styled-input mgr-login" value="${login}"></div><div class="input-group"><label>Пароль</label><input type="text" class="styled-input mgr-pass" value="${pass}"></div></div>`;
+        div.innerHTML = `<div class="card-header"><span class="card-title">Менеджер</span><button onclick="this.parentElement.parentElement.remove()" class="btn-remove">✕</button></div><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;"><div class="input-group"><label>Ім'я</label><input type="text" class="styled-input mgr-name" value="${name}"></div><div class="input-group"><label>Telegram ID</label><input type="text" class="styled-input mgr-id" value="${id}"></div><div class="input-group"><label>Логін</label><input type="text" class="styled-input mgr-login" value="${login}"></div><div class="input-group"><label>Пароль</label><input type="text" class="styled-input mgr-pass" value="${pass}"></div></div><div class="checkbox-wrapper"><input type="checkbox" class="mgr-notif" ${checked}><span>🔔 Сповіщення в TG</span></div>`;
         document.getElementById('managersList').appendChild(div);
     }
     function addPromoField(title='', text='', index=Date.now()) {
@@ -863,7 +872,8 @@
             const row = el.closest('.setting-card');
             const name = row.querySelector('.mgr-name').value.trim(); const id = row.querySelector('.mgr-id').value.trim();
             const login = row.querySelector('.mgr-login').value.trim(); const pass = row.querySelector('.mgr-pass').value.trim();
-            if (name && id && login && pass) newManagers.push({ name, id, login, password: pass });
+            const notif = row.querySelector('.mgr-notif') ? row.querySelector('.mgr-notif').checked : true;
+            if (name && id && login && pass) newManagers.push({ name, id, login, password: pass, notificationsEnabled: notif });
         });
         const newPromos = []; document.querySelectorAll('.promo-title').forEach((el) => { const row = el.closest('.setting-card'); const title = row.querySelector('.promo-title').value.trim(); const text = row.querySelector('.promo-text').value.trim(); if (title && text) newPromos.push({ title, text }); });
         const newScripts = []; document.querySelectorAll('.script-title').forEach((el) => { const row = el.closest('.setting-card'); const title = row.querySelector('.script-title').value.trim(); const text = row.querySelector('.script-text').value.trim(); if (title && text) newScripts.push({ title, text }); });
